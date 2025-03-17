@@ -31,6 +31,14 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public boolean authenticate(String username, String password) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return false;
+        }
+        return passwordEncoder.matches(password, user.getPassword());
+    }
+
     public void updateById(Long id, UserDTO userDTO){
         User user = userRepository.findById(id).orElse(null);
         if(userDTO.getUsername()!=null && !userDTO.getUsername().isBlank()){
