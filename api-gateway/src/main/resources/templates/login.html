@@ -28,24 +28,21 @@
 
         fetch('/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // обязательно!
             body: JSON.stringify(formData)
-        })
-            .then(response => {
-                if (response.ok) {
-                    alert('Login successful!');
-                    window.location.href = '/home'; // ✅ редиректим
-                    // window.location.href = '/dashboard'; // можно редиректить
-                } else {
-                    alert('Login failed!');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Something went wrong!');
-            });
+        }).then(response => {
+            if (response.ok) {
+                alert('Успешный вход');
+                return response.text(); // или .json()
+            } else {
+                throw new Error('Login failed');
+            }
+        }).then(() => {
+            // теперь можно перейти
+            window.location.href = '/home';
+        });
+
     });
 </script>
 </body>

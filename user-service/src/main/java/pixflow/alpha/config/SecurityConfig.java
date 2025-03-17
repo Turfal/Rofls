@@ -45,27 +45,31 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable) // отключаем CSRF — ты работаешь через fetch
-                .cors(Customizer.withDefaults())       // включаем CORS
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowCredentials(true);
+                    config.addAllowedOrigin("http://localhost:8080"); // Убедись, что тут правильный порт
+                    config.addAllowedMethod("*");
+                    config.addAllowedHeader("*");
+                    return config;
+                }))
+                .csrf(AbstractHttpConfigurer::disable) // отключаем CSRF, если используем fetch
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/register", "/login",
-                                "/login-page", "/register-page"
-                        ).permitAll()
+                        .requestMatchers("/login", "/logout", "/register", "/me", "/login-page", "/register-page").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(AbstractAuthenticationFilterConfigurer::disable) // отключаем форму Spring
+                .formLogin(AbstractAuthenticationFilterConfigurer::disable) // отключаем стандартную форму Spring
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessHandler((request, response, authentication) -> {
                             response.setStatus(HttpServletResponse.SC_OK);
                         })
                 )
-                .sessionManagement(sess -> sess
-                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .authenticationProvider(authenticationProvider())
                 .build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -80,7 +84,7 @@ public class SecurityConfig {
         config.addAllowedMethod("*");
 
         // ✅ Используй паттерн, вместо "*" напрямую
-        config.addAllowedOrigin("http://localhost:8080"); // работает с credentials
+        config.addAllowedOrigin("*"); // работает с credentials
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

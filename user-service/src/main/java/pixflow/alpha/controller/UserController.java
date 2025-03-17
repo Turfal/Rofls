@@ -2,6 +2,7 @@ package pixflow.alpha.controller;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,9 +55,19 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(Principal principal) {
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request, Principal principal) {
+        HttpSession session = request.getSession(false);
+        System.out.println("Session: " + (session != null ? session.getId() : "null"));
+        System.out.println("Principal: " + (principal != null ? principal.getName() : "null"));
+
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not Authenticated");
+        }
+
         return ResponseEntity.ok(Map.of("username", principal.getName()));
     }
+
+
 
     @PutMapping("/update/{id}")
     public ResponseEntity<UserDTO> updateUserById(@PathVariable Long id, @RequestBody UserDTO userDTO){

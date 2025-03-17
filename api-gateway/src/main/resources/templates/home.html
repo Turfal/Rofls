@@ -15,9 +15,11 @@
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include' // 🔥 добавь это
     })
-        .then(res => {
+
+            .then(res => {
             if (res.ok) return res.json();
             else throw new Error('Not logged in');
         })
@@ -32,8 +34,10 @@
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', () => {
         fetch('/logout', {
-            method: 'POST'
-        }).then(() => {
+            method: 'POST',
+            credentials: 'include' // 🔥 тоже добавь
+        })
+            .then(() => {
             alert('Logged out');
             window.location.href = '/login-page';
         });

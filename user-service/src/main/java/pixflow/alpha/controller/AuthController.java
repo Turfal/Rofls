@@ -2,6 +2,7 @@ package pixflow.alpha.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,13 +31,21 @@ public class AuthController {
             UsernamePasswordAuthenticationToken authReq =
                     new UsernamePasswordAuthenticationToken(user.get("username"), user.get("password"));
 
-            Authentication auth = authenticationManager.authenticate(authReq);
-
-            // Устанавливаем авторизацию в SecurityContext
-            SecurityContextHolder.getContext().setAuthentication(auth);
-            request.getSession(); // создаём сессию
-
-            return ResponseEntity.ok("Успешный вход");
+            try {
+                Authentication auth = authenticationManager.authenticate(authReq);
+                SecurityContextHolder.getContext().setAuthentication(auth);
+                request.getSession(); // создаём сессию
+                HttpSession session = request.getSession();
+                System.out.println("Session ID: " + session.getId());
+                System.out.println("Is New: " + session.isNew());
+                return ResponseEntity.ok("Успешный вход");
+            } catch (AuthenticationException e) {
+                System.out.println("Ошибка аутентификации: " + e.getMessage()); // 🔥 Логируем
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверные данные");
+            } catch (Exception e) {
+                System.out.println("Другая ошибка: " + e.getMessage()); // 🔥 Логируем
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка сервера");
+            }
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверные данные");
         }
