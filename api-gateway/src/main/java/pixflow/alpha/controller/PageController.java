@@ -1,26 +1,35 @@
 package pixflow.alpha.controller;
 
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ServerWebExchange;
 
 @Controller
 public class PageController {
 
     @GetMapping("/login")
-    public String login() {
-        return "login"; // Возвращает файл login.html
+    public String loginPage(ServerWebExchange exchange, Model model) {
+        String logout = exchange.getRequest().getQueryParams().getFirst("logout");
+        String error = exchange.getRequest().getQueryParams().getFirst("error");
+
+        if (logout != null) {
+            model.addAttribute("message", "Вы успешно вышли из аккаунта.");
+        } else if (error != null) {
+            model.addAttribute("error", "Неверный логин или пароль.");
+        }
+
+        return "login";
     }
 
     @GetMapping("/register")
-    public String register() {
-        return "register"; // Возвращает файл register.html
+    public String registerPage() {
+        return "register";
     }
 
     @GetMapping("/home")
-    public String home() {
-        return "home"; // Возвращает файл home.html
+    public String homePage(Model model) {
+        model.addAttribute("username", "Пользователь"); // Можно позже связать с сессией
+        return "home";
     }
 }
