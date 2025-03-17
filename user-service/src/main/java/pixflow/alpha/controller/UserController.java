@@ -1,5 +1,7 @@
 package pixflow.alpha.controller;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +12,7 @@ import pixflow.alpha.dto.UserDTO;
 import pixflow.alpha.model.User;
 import pixflow.alpha.service.UserService;
 
+import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,10 +41,21 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO userDTO) {
-        System.out.println("Received registration request: " + userDTO);
+    public ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO userDTO, HttpServletRequest request) {
         userService.save(userDTO);
+
+        try {
+            request.login(userDTO.getUsername(), userDTO.getPassword()); // ✅ автологин
+        } catch (ServletException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Principal principal) {
+        return ResponseEntity.ok(Map.of("username", principal.getName()));
     }
 
     @PutMapping("/update/{id}")

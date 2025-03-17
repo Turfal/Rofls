@@ -7,7 +7,7 @@
 </head>
 <body>
 <h2>Register</h2>
-<form id="registrationForm">
+<form id="registrationForm" action="/register" method="POST">
     <label for="username">Username:</label>
     <input type="text" id="username" name="username" required><br><br>
 
@@ -42,6 +42,7 @@
             .then(response => {
                 if (response.ok) {
                     alert('Registration successful!');
+                    window.location.href = '/home';
                 } else {
                     alert('Registration failed!');
                 }

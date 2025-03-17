@@ -8,7 +8,7 @@ import org.springframework.web.server.ServerWebExchange;
 @Controller
 public class PageController {
 
-    @GetMapping("/login")
+    @GetMapping("/login-page")
     public String loginPage(ServerWebExchange exchange, Model model) {
         String logout = exchange.getRequest().getQueryParams().getFirst("logout");
         String error = exchange.getRequest().getQueryParams().getFirst("error");
@@ -22,10 +22,11 @@ public class PageController {
         return "login";
     }
 
-    @GetMapping("/register")
+    @GetMapping("/register-page")
     public String registerPage() {
         return "register";
     }
+
 
     @GetMapping("/home")
     public String homePage(Model model) {

@@ -1,14 +1,43 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Главная</title>
+    <title>Home</title>
 </head>
 <body>
-<h2>Добро пожаловать, <span th:text="${username}">пользователь</span>!</h2>
+<h2>Welcome, <span id="username">Loading...</span>!</h2>
 
-<form action="/logout" method="POST">
-    <button type="submit">Выйти</button>
-</form>
+<button id="logoutBtn">Logout</button>
+
+<script>
+    // Получаем текущего пользователя
+    fetch('/me', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(res => {
+            if (res.ok) return res.json();
+            else throw new Error('Not logged in');
+        })
+        .then(data => {
+            document.getElementById('username').textContent = data.username;
+        })
+        .catch(() => {
+            alert('You are not logged in');
+            window.location.href = '/login-page';
+        });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        fetch('/logout', {
+            method: 'POST'
+        }).then(() => {
+            alert('Logged out');
+            window.location.href = '/login-page';
+        });
+    });
+</script>
 </body>
 </html>
