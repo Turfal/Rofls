@@ -1,38 +1,35 @@
 package pixflow.alpha.controller;
 
-import org.springframework.cloud.gateway.mvc.ProxyExchange;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.server.ServerWebExchange;
 
 @Controller
 public class PageController {
 
     @GetMapping("/login")
-    public String login() {
-        return "login"; // Возвращает файл login.html
-    }
+    public String loginPage(ServerWebExchange exchange, Model model) {
+        String logout = exchange.getRequest().getQueryParams().getFirst("logout");
+        String error = exchange.getRequest().getQueryParams().getFirst("error");
 
-    @PostMapping("/login")
-    public ResponseEntity<?> processLogin(ProxyExchange<?> proxy) {
-        // Перенаправляем POST-запрос на user-service
-        return proxy.uri("lb://user-service/auth/login").post();
+        if (logout != null) {
+            model.addAttribute("message", "Вы успешно вышли из аккаунта.");
+        } else if (error != null) {
+            model.addAttribute("error", "Неверный логин или пароль.");
+        }
+
+        return "login";
     }
 
     @GetMapping("/register")
-    public String register() {
-        return "register"; // Возвращает файл register.html
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> processRegister(ProxyExchange<?> proxy) {
-        // Перенаправляем POST-запрос на user-service
-        return proxy.uri("lb://user-service/auth/register").post();
+    public String registerPage() {
+        return "register";
     }
 
     @GetMapping("/home")
-    public String home() {
-        return "home"; // Возвращает файл home.html
+    public String homePage(Model model) {
+        model.addAttribute("username", "Пользователь"); // Можно позже связать с сессией
+        return "home";
     }
 }

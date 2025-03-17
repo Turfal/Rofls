@@ -1,47 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Вход</title>
 </head>
 <body>
-<h2>Login</h2>
-<form id="loginForm">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required><br><br>
+<h2>Войти в аккаунт</h2>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required><br><br>
+<p th:if="${message}" style="color:green;" th:text="${message}"></p>
+<p th:if="${error}" style="color:red;" th:text="${error}"></p>
 
-    <button type="submit">Login</button>
+<form action="/login" method="POST">
+    <label>Имя пользователя:</label>
+    <input type="text" name="username" required><br><br>
+
+    <label>Пароль:</label>
+    <input type="password" name="password" required><br><br>
+
+    <button type="submit">Войти</button>
 </form>
 
-<script>
-    document.getElementById('loginForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        const formData = {
-            username: document.getElementById('username').value,
-            password: document.getElementById('password').value
-        };
-
-        fetch('/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = '/home';
-                } else {
-                    alert('Login failed!');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    });
-</script>
+<p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
 </body>
 </html>

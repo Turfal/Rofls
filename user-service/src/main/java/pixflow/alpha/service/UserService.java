@@ -8,6 +8,9 @@ import pixflow.alpha.dto.UserDTO;
 import pixflow.alpha.model.User;
 import pixflow.alpha.repository.UserRepository;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @Data
 public class UserService {
@@ -17,8 +20,23 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private final Map<Long, String> tokens = new HashMap<>();
+
+
     public User findById(Long id){
         return userRepository.findById(id).orElse(null);
+    }
+    public User findByUsername(String username){return userRepository.findByUsername(username).orElse(null);}
+    public void storeToken(Long userId, String token) {
+        tokens.put(userId, token);
+    }
+
+    public void removeToken(Long userId) {
+        tokens.remove(userId);
+    }
+
+    public boolean isTokenValid(Long userId, String token) {
+        return token.equals(tokens.get(userId));
     }
     public void save(UserDTO userDTO){
         User user = new User();
