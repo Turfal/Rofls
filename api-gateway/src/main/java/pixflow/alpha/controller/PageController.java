@@ -27,10 +27,8 @@ public class PageController {
         return "register";
     }
 
-
     @GetMapping("/home")
-    public String homePage(Model model) {
-        model.addAttribute("username", "Пользователь"); // Можно позже связать с сессией
+    public String homePage() {
         return "home";
     }
 }

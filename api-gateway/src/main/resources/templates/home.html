@@ -3,44 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        h2 {
+            color: #333;
+            margin: 0;
+        }
+        button {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #d32f2f;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        #spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #333;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-<h2>Welcome, <span id="username">Loading...</span>!</h2>
+<div class="header">
+    <h2>Welcome, <span id="username">
+            <span id="spinner"></span>
+        </span>!</h2>
+    <button id="logoutBtn">Logout</button>
+</div>
 
-<button id="logoutBtn">Logout</button>
+<div class="content">
+    <p>You have successfully logged in. This is your personal dashboard.</p>
+</div>
 
 <script>
-    // Получаем текущего пользователя
-    fetch('/me', {
+    // Check if token exists, if not redirect to login
+    const token = localStorage.getItem('jwt_token');
+    if (!token) {
+        window.location.href = '/login-page';
+    }
+
+    // Fetch current user data
+    fetch('/auth/me', {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include' // 🔥 добавь это
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
     })
-
-            .then(res => {
-            if (res.ok) return res.json();
-            else throw new Error('Not logged in');
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Not authenticated');
+            }
         })
         .then(data => {
             document.getElementById('username').textContent = data.username;
         })
         .catch(() => {
-            alert('You are not logged in');
+            localStorage.removeItem('jwt_token');
+            alert('Your session has expired. Please login again.');
             window.location.href = '/login-page';
         });
 
-    // Logout
+    // Logout functionality
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        fetch('/logout', {
-            method: 'POST',
-            credentials: 'include' // 🔥 тоже добавь
-        })
-            .then(() => {
-            alert('Logged out');
-            window.location.href = '/login-page';
-        });
+        // Clear token from localStorage
+        localStorage.removeItem('jwt_token');
+
+        // Redirect to login page
+        window.location.href = '/login-page?logout=true';
     });
 </script>
 </body>
