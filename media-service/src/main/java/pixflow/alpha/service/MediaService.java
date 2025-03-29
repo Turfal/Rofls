@@ -2,6 +2,7 @@ package pixflow.alpha.service;
 
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -86,6 +87,23 @@ public class MediaService {
             throw new RuntimeException("You are not authorized to delete this post");
         }
 
+        // Извлекаем имя файла из URL
+        String imageUrl = mediaPost.getImageUrl();
+        String objectName = extractObjectNameFromUrl(imageUrl);
+
+        // Удаляем файл из MinIO
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete file from MinIO", e);
+        }
+
+        // Удаляем запись из базы данных
         mediaPostRepository.delete(mediaPost);
     }
 
@@ -96,5 +114,23 @@ public class MediaService {
         dto.setImageUrl(mediaPost.getImageUrl());
         dto.setCreatedAt(mediaPost.getCreatedAt());
         return dto;
+    }
+
+    /**
+     * Извлекает имя объекта из URL.
+     * Пример: "/bucket-name/unique-file-name.jpg" -> "unique-file-name.jpg"
+     */
+    private String extractObjectNameFromUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            throw new IllegalArgumentException("Image URL cannot be null or empty");
+        }
+
+        // Разделяем URL по слэшам и берем последний элемент
+        String[] parts = imageUrl.split("/");
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("Invalid image URL format");
+        }
+
+        return parts[parts.length - 1];
     }
 }
