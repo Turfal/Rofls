@@ -5,69 +5,79 @@
     <title>Home</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff007f, #000);
+            color: white;
+            margin: 0;
+            padding: 0;
+            text-align: center;
         }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
         }
-        h2 {
-            color: #333;
+        .header h1 {
             margin: 0;
+            font-size: 28px;
+            font-weight: bold;
         }
+
         button {
-            background-color: #f44336;
-            color: white;
-            padding: 10px 15px;
+            background: #ff007f;
             border: none;
-            border-radius: 4px;
+            padding: 10px 20px;
+            color: white;
+            font-size: 16px;
             cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
         }
-        .media-upload {
-            margin-bottom: 20px;
-        }
-        .media-upload input {
-            margin-right: 10px;
+        button:hover {
+            background: #ff3399;
         }
         .media-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 15px;
+            padding: 20px;
         }
-        .media-item {
-            position: relative;
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
+
         .media-item img {
-            max-width: 100%;
-            max-height: 250px;
-            object-fit: cover;
+            width: 100%;
+            border-radius: 10px;
         }
-        .media-item .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: red;
+        /* Анимация для переливающегося фона */
+        body {
+            font-family: 'Arial', sans-serif;
             color: white;
-            border: none;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            cursor: pointer;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background: linear-gradient(135deg, #ff007f, #000);
+            background-size: 400% 400%; /* Увеличиваем размер градиента для плавной анимации */
+            animation: gradientAnimation 10s ease infinite; /* Добавляем анимацию */
+        }
+
+        /* Ключевые кадры для анимации фона */
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
     </style>
 </head>
 <body>
 <div class="header">
+    <h1>Roflogram</h1>
     <h2>Welcome, <span id="username"></span>!</h2>
     <button id="logoutBtn">Logout</button>
 </div>

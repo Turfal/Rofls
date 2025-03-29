@@ -36,14 +36,14 @@ public class MediaController {
     }
 
     @DeleteMapping("/posts/{id}")
-    public ResponseEntity<Void> deleteMediaPost(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteMediaPost(@PathVariable("id") Long id) {
         mediaService.deleteMediaPost(id);
         return ResponseEntity.noContent().build();
     }
 
 
     @GetMapping("/files/{filename}")
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) throws Exception {
+    public ResponseEntity<Resource> serveFile(@PathVariable("filename") String filename) throws Exception {
         log.info("Request to serve file: {}", filename);
         try {
             InputStream fileStream = minioClient.getObject(
