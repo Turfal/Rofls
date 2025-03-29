@@ -30,42 +30,56 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        button:hover {
-            background-color: #d32f2f;
+        .media-upload {
+            margin-bottom: 20px;
         }
-        .content {
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
+        .media-upload input {
+            margin-right: 10px;
         }
-        #spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0, 0, 0, 0.3);
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .media-item {
+            position: relative;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .media-item img {
+            max-width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+        }
+        .media-item .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            color: white;
+            border: none;
             border-radius: 50%;
-            border-top-color: #333;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 <div class="header">
-    <h2>Welcome, <span id="username">
-            <span id="spinner"></span>
-        </span>!</h2>
+    <h2>Welcome, <span id="username"></span>!</h2>
     <button id="logoutBtn">Logout</button>
 </div>
 
-<div class="content">
-    <p>You have successfully logged in. This is your personal dashboard.</p>
+<div class="media-upload">
+    <input type="file" id="imageUpload" accept="image/*">
+    <button id="uploadBtn">Upload Image</button>
 </div>
 
+<div id="mediaGrid" class="media-grid"></div>
+
 <script>
-    // Check if token exists, if not redirect to login
     const token = localStorage.getItem('jwt_token');
     if (!token) {
         window.location.href = '/login-page';
@@ -97,12 +111,110 @@
 
     // Logout functionality
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        // Clear token from localStorage
         localStorage.removeItem('jwt_token');
-
-        // Redirect to login page
         window.location.href = '/login-page?logout=true';
     });
+
+    // Media Upload
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+        const fileInput = document.getElementById('imageUpload');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Please select a file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/media/upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Upload failed');
+                }
+            })
+            .then(() => {
+                loadMediaPosts();
+                fileInput.value = ''; // Clear file input
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Upload failed');
+            });
+    });
+
+    // Load Media Posts
+    function loadMediaPosts() {
+        fetch('/media/posts', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        })
+            .then(response => response.json())
+            .then(posts => {
+                const mediaGrid = document.getElementById('mediaGrid');
+                mediaGrid.innerHTML = '';
+
+                posts.forEach(post => {
+                    const mediaItem = document.createElement('div');
+                    mediaItem.classList.add('media-item');
+                    mediaItem.innerHTML = `
+                    <img src="${post.imageUrl}" alt="Media Post">
+                    <p>Uploaded by: ${post.username}</p>
+                    ${post.username === document.getElementById('username').textContent
+                        ? `<button class="delete-btn" data-id="${post.id}">×</button>`
+                        : ''}
+                `;
+                    mediaGrid.appendChild(mediaItem);
+                });
+
+                // Add delete event listeners
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const postId = btn.getAttribute('data-id');
+                        deleteMediaPost(postId);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    // Delete Media Post
+    function deleteMediaPost(postId) {
+        fetch(`/media/posts/${postId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    loadMediaPosts();
+                } else {
+                    throw new Error('Delete failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Delete failed');
+            });
+    }
+
+    // Initial load of media posts
+    loadMediaPosts();
 </script>
 </body>
 </html>
