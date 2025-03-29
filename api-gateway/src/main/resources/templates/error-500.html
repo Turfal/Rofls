@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - Internal Server Error | Roflogram</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff007f, #000);
+            background-size: 400% 400%;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            animation: gradientAnimation 10s ease infinite;
+            text-align: center;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .error-container {
+            max-width: 500px;
+            width: 90%;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .error-code {
+            font-size: 80px;
+            font-weight: bold;
+            color: #ff007f;
+            margin-bottom: 20px;
+            animation: glitch 1s linear infinite;
+        }
+
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px, 0) skew(0deg); }
+            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
+            62% { transform: translate(0, 0) skew(5deg); }
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        .error-emoji {
+            font-size: 50px;
+            margin-bottom: 20px;
+            animation: wobble 2s ease infinite;
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        .home-link {
+            display: inline-block;
+            background: #ff007f;
+            padding: 12px 25px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s ease, transform 0.1s ease;
+        }
+
+        .home-link:hover {
+            background: #ff3399;
+        }
+
+        .home-link:active {
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 400px) {
+            .error-container {
+                padding: 20px;
+            }
+
+            .error-code {
+                font-size: 60px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+
+            .home-link {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="error-container">
+    <div class="error-code">500</div>
+    <div class="error-emoji">💥</div>
+    <h1>Oh No! Server Crashed</h1>
+    <p>Our servers just had a little meltdown. Don’t worry, our team is on it—probably with some coffee and a fire extinguisher! 🔥</p>
+    <a href="/home" class="home-link">Back to Home</a>
+</div>
+</body>
+</html>
