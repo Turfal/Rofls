@@ -28,7 +28,6 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     window.location.href = '/login?logout=true';
 });
 // Post Modal functionality
-// Post Modal functionality
 const postModal = document.getElementById('postModal');
 const createPostBtn = document.getElementById('createPostBtn');
 const cancelPostBtn = document.getElementById('cancelPost');
@@ -161,7 +160,7 @@ submitPostBtn.addEventListener('click', async () => {
             }
             const mediaData = await response.json();
             console.log('Media upload response:', mediaData);
-            mediaUrl = mediaData.mediaUrl;
+            mediaUrl = mediaData.imageUrl;
         }
 
         const postData = {
@@ -203,6 +202,25 @@ function resetPostForm() {
     mediaPreview.style.display = 'none';
     previewContainer.innerHTML = '';
 }
+
+// Format media URL correctly for display
+function getFormattedMediaUrl(mediaUrl) {
+    if (!mediaUrl) return null;
+
+    // If the URL already starts with /media/files, return it as is
+    if (mediaUrl.startsWith('/media/files/')) {
+        return mediaUrl;
+    }
+
+    // Extract the filename from the URL
+    // The URL format is typically '/bucket-name/filename.ext'
+    const parts = mediaUrl.split('/');
+    const filename = parts[parts.length - 1];
+
+    // Return the properly formatted URL for the media-files endpoint
+    return `/media/files/${filename}`;
+}
+
 // Load Posts
 function loadPosts() {
     fetch('/posts/all', {
@@ -230,22 +248,25 @@ function loadPosts() {
                                 <div class="post-time">${formatDate(post.createdAt)}</div>
                             </div>
                         </div>
-                        <div class="post-content">${post.content}</div>
+                        <div class="post-content">${post.content || ''}</div>
                     `;
 
-                // Проверяем наличие медиа и его тип
-                if (post.mediaUrl) {
+                // Format the media URL correctly before using it
+                const formattedMediaUrl = getFormattedMediaUrl(post.mediaUrl);
+
+                // Check if media exists and display based on type
+                if (formattedMediaUrl) {
                     if (post.mediaType === 'image') {
                         postContent += `
                             <div class="post-media">
-                                <img src="${post.mediaUrl}" alt="Post image">
+                                <img src="${formattedMediaUrl}" alt="Post image" class="post-image">
                             </div>
                         `;
                     } else if (post.mediaType === 'video') {
                         postContent += `
                             <div class="post-media">
-                                <video controls width="100%">
-                                    <source src="${post.mediaUrl}" type="video/mp4">
+                                <video controls class="post-video">
+                                    <source src="${formattedMediaUrl}" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
                             </div>
@@ -316,18 +337,16 @@ let postIdToDelete = null;
 
 document.getElementById('confirmDelete').addEventListener('click', () => {
     if (postIdToDelete) {
-        // Первый запрос: удаление медиафайла
-        fetch(`media/delete/${postIdToDelete}`, {
+        // First request: delete media file
+        fetch(`/media/delete/${postIdToDelete}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         })
             .then(mediaResponse => {
-                if (!mediaResponse.ok) {
-                    throw new Error('Failed to delete media');
-                }
-                // Второй запрос: удаление поста
+                // Continue with post deletion regardless of media deletion result
+                // as some posts might not have media
                 return fetch(`/posts/${postIdToDelete}`, {
                     method: 'DELETE',
                     headers: {
@@ -339,16 +358,16 @@ document.getElementById('confirmDelete').addEventListener('click', () => {
                 if (!postResponse.ok) {
                     throw new Error('Failed to delete post');
                 }
-                // Успешное удаление
+                // Success
                 loadPosts();
-                alert('Post and media deleted successfully');
+                alert('Post deleted successfully');
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert(`Failed to delete: ${error.message}`);
             })
             .finally(() => {
-                // Закрытие модального окна и сброс переменной
+                // Close modal and reset variable
                 document.getElementById('deleteModal').style.display = 'none';
                 postIdToDelete = null;
             });
@@ -356,7 +375,7 @@ document.getElementById('confirmDelete').addEventListener('click', () => {
 });
 
 document.getElementById('cancelDelete').addEventListener('click', () => {
-    // Закрытие модального окна без удаления
+    // Close modal without deleting
     document.getElementById('deleteModal').style.display = 'none';
     postIdToDelete = null;
 });

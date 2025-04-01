@@ -5,6 +5,7 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MediaService {
     private final MinioClient minioClient;
     private final MediaPostRepository mediaPostRepository;
@@ -28,8 +30,8 @@ public class MediaService {
     @Value("${minio.bucket}")
     private String bucketName;
 
-    public MediaPostDTO uploadImage(MultipartFile file) throws Exception {
-        // Получаем username из атрибутов запроса
+    public MediaPostDTO uploadMedia(MultipartFile file) throws Exception {
+        // Get username from request attributes
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String username = (String) request.getAttribute("username");
 
@@ -41,6 +43,10 @@ public class MediaService {
         assert originalFilename != null;
         String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
         String uniqueFileName = UUID.randomUUID() + fileExtension;
+
+        // Determine media type (image or video)
+        String mediaType = determineMediaType(file.getContentType());
+        log.info("Uploading {} file: {}, content type: {}", mediaType, uniqueFileName, file.getContentType());
 
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
@@ -58,6 +64,7 @@ public class MediaService {
         MediaPost mediaPost = new MediaPost();
         mediaPost.setUsername(username);
         mediaPost.setImageUrl(imageUrl);
+        mediaPost.setMediaType(mediaType); // Save media type
 
         MediaPost savedPost = mediaPostRepository.save(mediaPost);
 
@@ -72,7 +79,7 @@ public class MediaService {
     }
 
     public void deleteMediaPost(Long id) {
-        // Получаем username из атрибутов запроса
+        // Get username from request attributes
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String username = (String) request.getAttribute("username");
 
@@ -87,11 +94,11 @@ public class MediaService {
             throw new RuntimeException("You are not authorized to delete this post");
         }
 
-        // Извлекаем имя файла из URL
+        // Extract filename from URL
         String imageUrl = mediaPost.getImageUrl();
         String objectName = extractObjectNameFromUrl(imageUrl);
 
-        // Удаляем файл из MinIO
+        // Delete file from MinIO
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
@@ -103,7 +110,7 @@ public class MediaService {
             throw new RuntimeException("Failed to delete file from MinIO", e);
         }
 
-        // Удаляем запись из базы данных
+        // Delete record from database
         mediaPostRepository.delete(mediaPost);
     }
 
@@ -112,25 +119,43 @@ public class MediaService {
         dto.setId(mediaPost.getId());
         dto.setUsername(mediaPost.getUsername());
         dto.setImageUrl(mediaPost.getImageUrl());
+        dto.setMediaType(mediaPost.getMediaType()); // Include media type
         dto.setCreatedAt(mediaPost.getCreatedAt());
         return dto;
     }
 
     /**
-     * Извлекает имя объекта из URL.
-     * Пример: "/bucket-name/unique-file-name.jpg" -> "unique-file-name.jpg"
+     * Extracts object name from URL.
+     * Example: "/bucket-name/unique-file-name.jpg" -> "unique-file-name.jpg"
      */
     private String extractObjectNameFromUrl(String imageUrl) {
         if (imageUrl == null || imageUrl.isEmpty()) {
             throw new IllegalArgumentException("Image URL cannot be null or empty");
         }
 
-        // Разделяем URL по слэшам и берем последний элемент
+        // Split URL by slashes and take the last element
         String[] parts = imageUrl.split("/");
         if (parts.length < 2) {
             throw new IllegalArgumentException("Invalid image URL format");
         }
 
         return parts[parts.length - 1];
+    }
+
+    /**
+     * Determines if the content is an image or video based on its content type
+     */
+    private String determineMediaType(String contentType) {
+        if (contentType == null) {
+            return "unknown";
+        }
+
+        if (contentType.startsWith("image/")) {
+            return "image";
+        } else if (contentType.startsWith("video/")) {
+            return "video";
+        } else {
+            return "other";
+        }
     }
 }

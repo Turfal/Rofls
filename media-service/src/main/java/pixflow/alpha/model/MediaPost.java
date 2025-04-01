@@ -19,6 +19,9 @@ public class MediaPost {
     @Column(nullable = false)
     private String imageUrl;
 
+    @Column
+    private String mediaType; // Added field for media type (image or video)
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
