@@ -5,5 +5,6 @@ import lombok.Data;
 @Data
 public class CreatePostDTO {
     private String content;
-    private String imageUrl;
+    private String mediaUrl;
+    private String mediaType; // Добавлено поле для типа медиа (image или video)
 }

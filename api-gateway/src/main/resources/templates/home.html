@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roflogram - Home</title>
     <link th:href="@{/css/home.css}" rel="stylesheet">
+    <style>
+        /* Добавляем стили для видео */
+        .post-media video {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        /* Стили для превью видео в модальном окне */
+        #previewVideo {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
 <div class="header">
@@ -21,12 +36,12 @@
         <h3>Create New Post</h3>
         <label for="postText"></label><textarea id="postText" maxlength="250" placeholder="What's on your mind? (250 chars max)"></textarea>
         <div class="char-counter"><span id="charCount">0</span>/250</div>
-        <div class="post-image-upload">
-            <input type="file" id="postImageUpload" accept="image/*">
-            <button id="attachImageBtn">Attach Image</button>
-            <div id="imagePreview" style="display: none;">
-                <img id="previewImg" src="" alt="Preview">
-                <button id="removeImageBtn">Remove</button>
+        <div class="post-media-upload">
+            <input type="file" id="postMediaUpload" accept="image/*,video/*">
+            <button id="attachMediaBtn">Attach Media</button>
+            <div id="mediaPreview" style="display: none;">
+                <div id="previewContainer"></div>
+                <button id="removeMediaBtn">Remove</button>
             </div>
         </div>
         <div class="modal-buttons">

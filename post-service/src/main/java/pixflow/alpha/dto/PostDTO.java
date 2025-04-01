@@ -8,6 +8,7 @@ public class PostDTO {
     private Long id;
     private String username;
     private String content;
-    private String imageUrl;
+    private String mediaUrl;
+    private String mediaType; // Добавлено поле для типа медиа
     private LocalDateTime createdAt;
 }

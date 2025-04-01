@@ -31,15 +31,16 @@ public class PostService {
 
         // Validate input
         if ((createPostDTO.getContent() == null || createPostDTO.getContent().trim().isEmpty()) &&
-                (createPostDTO.getImageUrl() == null || createPostDTO.getImageUrl().trim().isEmpty())) {
-            throw new RuntimeException("Post must have either text content or an image");
+                (createPostDTO.getMediaUrl() == null || createPostDTO.getMediaUrl().trim().isEmpty())) {
+            throw new RuntimeException("Post must have either text content or media");
         }
 
         // Create post
         Post post = new Post();
         post.setUsername(username);
         post.setContent(createPostDTO.getContent());
-        post.setImageUrl(createPostDTO.getImageUrl());
+        post.setMediaUrl(createPostDTO.getMediaUrl());
+        post.setMediaType(createPostDTO.getMediaType()); // Установка типа медиа
 
         Post savedPost = postRepository.save(post);
         return convertToDTO(savedPost);
@@ -83,7 +84,8 @@ public class PostService {
         dto.setId(post.getId());
         dto.setUsername(post.getUsername());
         dto.setContent(post.getContent());
-        dto.setImageUrl(post.getImageUrl());
+        dto.setMediaUrl(post.getMediaUrl());
+        dto.setMediaType(post.getMediaType());
         dto.setCreatedAt(post.getCreatedAt());
         return dto;
     }

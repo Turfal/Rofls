@@ -20,7 +20,6 @@ fetch('/auth/me', {
     })
     .catch(() => {
         localStorage.removeItem('jwt_token');
-        // alert('Your session has expired. Please login again.');
         window.location.href = '/login';
     });
 // Logout functionality
@@ -34,13 +33,15 @@ const createPostBtn = document.getElementById('createPostBtn');
 const cancelPostBtn = document.getElementById('cancelPost');
 const postTextArea = document.getElementById('postText');
 const charCount = document.getElementById('charCount');
-const postImageUpload = document.getElementById('postImageUpload');
-const attachImageBtn = document.getElementById('attachImageBtn');
-const imagePreview = document.getElementById('imagePreview');
-const previewImg = document.getElementById('previewImg');
-const removeImageBtn = document.getElementById('removeImageBtn');
+const postMediaUpload = document.getElementById('postMediaUpload');
+const attachMediaBtn = document.getElementById('attachMediaBtn');
+const mediaPreview = document.getElementById('mediaPreview');
+const previewContainer = document.getElementById('previewContainer');
+const removeMediaBtn = document.getElementById('removeMediaBtn');
 const submitPostBtn = document.getElementById('submitPost');
-let selectedImage = null;
+let selectedMedia = null;
+let mediaType = null;
+
 createPostBtn.addEventListener('click', () => {
     postModal.style.display = 'flex';
     postTextArea.focus();
@@ -54,33 +55,50 @@ postTextArea.addEventListener('input', () => {
     charCount.textContent = length;
     charCount.style.color = length > 220 ? '#ff4d4d' : '#888';
 });
-attachImageBtn.addEventListener('click', () => {
-    postImageUpload.click();
+attachMediaBtn.addEventListener('click', () => {
+    postMediaUpload.click();
 });
-postImageUpload.addEventListener('change', () => {
-    const file = postImageUpload.files[0];
+postMediaUpload.addEventListener('change', () => {
+    const file = postMediaUpload.files[0];
     if (file) {
-        selectedImage = file;
-        previewImg.src = URL.createObjectURL(file);
-        imagePreview.style.display = 'block';
+        selectedMedia = file;
+
+        // Определяем тип медиа по MIME типу файла
+        if (file.type.startsWith('image/')) {
+            mediaType = 'image';
+            // Создаем превью для изображения
+            previewContainer.innerHTML = `<img id="previewImg" src="${URL.createObjectURL(file)}" alt="Preview">`;
+        } else if (file.type.startsWith('video/')) {
+            mediaType = 'video';
+            // Создаем превью для видео
+            previewContainer.innerHTML = `
+                <video id="previewVideo" controls>
+                    <source src="${URL.createObjectURL(file)}" type="${file.type}">
+                    Your browser does not support the video tag.
+                </video>`;
+        }
+
+        mediaPreview.style.display = 'block';
     }
 });
-removeImageBtn.addEventListener('click', () => {
-    selectedImage = null;
-    postImageUpload.value = '';
-    imagePreview.style.display = 'none';
+removeMediaBtn.addEventListener('click', () => {
+    selectedMedia = null;
+    mediaType = null;
+    postMediaUpload.value = '';
+    mediaPreview.style.display = 'none';
+    previewContainer.innerHTML = '';
 });
 submitPostBtn.addEventListener('click', async () => {
     const postText = postTextArea.value.trim();
-    if (!postText && !selectedImage) {
-        alert('Please enter text or attach an image');
+    if (!postText && !selectedMedia) {
+        alert('Please enter text or attach media');
         return;
     }
     try {
-        let imageUrl = null;
-        if (selectedImage) {
+        let mediaUrl = null;
+        if (selectedMedia) {
             const formData = new FormData();
-            formData.append('file', selectedImage);
+            formData.append('file', selectedMedia);
             const response = await fetch('/media/upload', {
                 method: 'POST',
                 headers: {
@@ -88,11 +106,18 @@ submitPostBtn.addEventListener('click', async () => {
                 },
                 body: formData
             });
-            if (!response.ok) throw new Error('Failed to upload image');
-            const imageData = await response.json();
-            imageUrl = imageData.imageUrl;
+            if (!response.ok) throw new Error('Failed to upload media');
+            const mediaData = await response.json();
+            mediaUrl = mediaData.mediaUrl; // Предполагаем, что сервис возвращает mediaUrl вместо imageUrl
         }
-        const postData = { content: postText, imageUrl };
+
+        // Обновляем объект postData, чтобы включить тип медиа
+        const postData = {
+            content: postText,
+            mediaUrl: mediaUrl,
+            mediaType: mediaType
+        };
+
         const postResponse = await fetch('/posts/create', {
             method: 'POST',
             headers: {
@@ -114,9 +139,11 @@ function resetPostForm() {
     postTextArea.value = '';
     charCount.textContent = '0';
     charCount.style.color = '#888';
-    selectedImage = null;
-    postImageUpload.value = '';
-    imagePreview.style.display = 'none';
+    selectedMedia = null;
+    mediaType = null;
+    postMediaUpload.value = '';
+    mediaPreview.style.display = 'none';
+    previewContainer.innerHTML = '';
 }
 // Load Posts
 function loadPosts() {
@@ -147,13 +174,27 @@ function loadPosts() {
                         </div>
                         <div class="post-content">${post.content}</div>
                     `;
-                if (post.imageUrl) {
-                    postContent += `
-                            <div class="post-image">
-                                <img src="${post.imageUrl}" alt="Post image">
+
+                // Проверяем наличие медиа и его тип
+                if (post.mediaUrl) {
+                    if (post.mediaType === 'image') {
+                        postContent += `
+                            <div class="post-media">
+                                <img src="${post.mediaUrl}" alt="Post image">
                             </div>
                         `;
+                    } else if (post.mediaType === 'video') {
+                        postContent += `
+                            <div class="post-media">
+                                <video controls width="100%">
+                                    <source src="${post.mediaUrl}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        `;
+                    }
                 }
+
                 postContent += `
                         <div class="post-footer">
                             <div class="post-actions">

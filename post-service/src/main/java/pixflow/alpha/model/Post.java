@@ -19,7 +19,10 @@ public class Post {
     private String content;
 
     @Column
-    private String imageUrl;
+    private String mediaUrl; // Переименовано с imageUrl
+
+    @Column
+    private String mediaType; // Новое поле для отслеживания типа медиа (image или video)
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

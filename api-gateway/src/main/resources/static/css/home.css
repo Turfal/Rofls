@@ -101,11 +101,64 @@ button:hover {
     line-height: 1.5;
     text-align: left;
 }
-.post-image img {
+.post-media img, .post-media video {
     max-width: 100%;
     border-radius: 10px;
     margin-bottom: 10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.post-media video {
+    width: 100%;
+    background-color: #000;
+    outline: none;
+}
+.video-player-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    background-color: #000;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.video-player-container video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    outline: none;
+}
+.play-button-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 0, 127, 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+.play-button-overlay:hover {
+    opacity: 1;
+    background-color: rgba(255, 0, 127, 1);
+}
+.play-button-overlay::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 10px 0 10px 20px;
+    border-color: transparent transparent transparent #ffffff;
+    margin-left: 5px;
 }
 .post-footer {
     display: flex;
@@ -184,28 +237,31 @@ button:hover {
     color: #888;
     margin-bottom: 10px;
 }
-.post-image-upload {
+.post-media-upload {
     margin-bottom: 15px;
 }
-.post-image-upload input[type="file"] {
+.post-media-upload input[type="file"] {
     display: none;
 }
-.post-image-upload button {
+.post-media-upload button {
     background: #ff007f;
     padding: 8px 15px;
     font-size: 14px;
 }
-#imagePreview {
+#mediaPreview {
     margin-top: 10px;
     text-align: center;
 }
-#imagePreview img {
+#mediaPreview img, #mediaPreview video {
     max-width: 100%;
     max-height: 150px;
     border-radius: 5px;
     margin-bottom: 10px;
 }
-#removeImageBtn {
+#mediaPreview video {
+    background-color: #000;
+}
+#removeMediaBtn {
     background: #ff4d4d;
     padding: 5px 10px;
     font-size: 12px;
@@ -328,4 +384,3 @@ button:hover {
 #loginRedirectButton:active {
     transform: scale(0.98);
 }
-
