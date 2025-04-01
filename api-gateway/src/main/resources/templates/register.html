@@ -1,328 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Roflogram</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #ff007f, #000);
-            background-size: 400% 400%;
-            color: white;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            animation: gradientAnimation 10s ease infinite;
-        }
-
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .registration-container {
-            max-width: 400px;
-            width: 90%;
-            margin: 20px;
-            padding: 30px;
-            background: rgba(0, 0, 0, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h2 {
-            margin-bottom: 25px;
-            font-size: 28px;
-            font-weight: bold;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            text-align: left;
-        }
-
-        input[type="text"],
-        input[type="password"],
-        input[type="email"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #555;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 16px;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        input[type="text"]:focus,
-        input[type="password"]:focus,
-        input[type="email"]:focus {
-            outline: none;
-            border-color: #ff007f;
-            box-shadow: 0 0 5px rgba(255, 0, 127, 0.5);
-        }
-
-        input[type="text"]::placeholder,
-        input[type="password"]::placeholder,
-        input[type="email"]::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .error-input {
-            border-color: #ff4d4d;
-            box-shadow: 0 0 5px rgba(255, 77, 77, 0.5);
-        }
-
-        .error-message {
-            color: #ff4d4d;
-            font-size: 12px;
-            text-align: left;
-            margin-top: 5px;
-            display: none;
-        }
-
-        button {
-            background: #ff007f;
-            border: none;
-            padding: 12px;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 8px;
-            width: 100%;
-            transition: background 0.3s ease, transform 0.1s ease;
-        }
-
-        button:hover {
-            background: #ff3399;
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        .message {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            text-align: center;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .success {
-            background-color: rgba(0, 255, 0, 0.2);
-            color: #00ff00;
-        }
-
-        .error {
-            background-color: rgba(255, 0, 0, 0.2);
-            color: #ff4d4d;
-        }
-
-        .login-link {
-            margin-top: 20px;
-            display: block;
-            text-align: center;
-            color: #ff007f;
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.3s ease;
-        }
-
-        .login-link:hover {
-            color: #ff3399;
-        }
-
-        @media (max-width: 400px) {
-            .registration-container {
-                padding: 20px;
-            }
-
-            h2 {
-                font-size: 24px;
-            }
-
-            button {
-                padding: 10px;
-                font-size: 14px;
-            }
-        }
-    </style>
+    <link th:href="@{/css/register.css}" rel="stylesheet">
 </head>
 <body>
 <div class="registration-container">
     <h2>Join Roflogram</h2>
-
     <div id="message" class="message" style="display: none;"></div>
-
     <form id="registrationForm">
         <div class="form-group">
             <label for="username">Username</label>
             <input type="text" id="username" placeholder="Enter your username" required>
             <div class="error-message" id="username-error">Username must be at least 3 characters long.</div>
         </div>
-
         <div class="form-group">
             <label for="email">Email</label>
             <input type="email" id="email" placeholder="Enter your email" required>
             <div class="error-message" id="email-error">Please enter a valid email address.</div>
         </div>
-
         <div class="form-group">
             <label for="password">Password</label>
             <input type="password" id="password" placeholder="Enter your password" required>
             <div class="error-message" id="password-error">Password must be at least 6 characters long.</div>
         </div>
-
         <button type="submit">Register</button>
     </form>
-
-    <a href="/login-page" class="login-link">Already have an account? Login here</a>
+    <a href="/login" class="login-link">Already have an account? Login here</a>
 </div>
-
-<script>
-    const registrationForm = document.getElementById('registrationForm');
-    const usernameInput = document.getElementById('username');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const usernameError = document.getElementById('username-error');
-    const emailError = document.getElementById('email-error');
-    const passwordError = document.getElementById('password-error');
-    const messageDiv = document.getElementById('message');
-
-    registrationForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        // Reset previous error states
-        usernameInput.classList.remove('error-input');
-        emailInput.classList.remove('error-input');
-        passwordInput.classList.remove('error-input');
-        usernameError.style.display = 'none';
-        emailError.style.display = 'none';
-        passwordError.style.display = 'none';
-        messageDiv.style.display = 'none';
-
-        // Client-side validation
-        let hasError = false;
-        const username = usernameInput.value.trim();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-
-        if (username.length < 3) {
-            usernameInput.classList.add('error-input');
-            usernameError.style.display = 'block';
-            hasError = true;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            emailInput.classList.add('error-input');
-            emailError.style.display = 'block';
-            hasError = true;
-        }
-
-        if (password.length < 6) {
-            passwordInput.classList.add('error-input');
-            passwordError.style.display = 'block';
-            hasError = true;
-        }
-
-        if (hasError) return;
-
-        // Proceed with registration
-        const formData = { username, email, password };
-
-        fetch('/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('Registration failed');
-                }
-            })
-            .then(data => {
-                localStorage.setItem('jwt_token', data.token);
-                messageDiv.textContent = 'Registration successful! Redirecting...';
-                messageDiv.className = 'message success';
-                messageDiv.style.display = 'block';
-                setTimeout(() => {
-                    window.location.href = '/home';
-                }, 1000);
-            })
-            .catch(error => {
-                messageDiv.textContent = 'Registration failed. Please try again.';
-                messageDiv.className = 'message error';
-                messageDiv.style.display = 'block';
-            });
-    });
-
-    // Real-time validation
-    usernameInput.addEventListener('input', () => {
-        if (usernameInput.value.trim().length < 3) {
-            usernameInput.classList.add('error-input');
-            usernameError.style.display = 'block';
-        } else {
-            usernameInput.classList.remove('error-input');
-            usernameError.style.display = 'none';
-        }
-    });
-
-    emailInput.addEventListener('input', () => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(emailInput.value.trim())) {
-            emailInput.classList.add('error-input');
-            emailError.style.display = 'block';
-        } else {
-            emailInput.classList.remove('error-input');
-            emailError.style.display = 'none';
-        }
-    });
-
-    passwordInput.addEventListener('input', () => {
-        if (passwordInput.value.trim().length < 6) {
-            passwordInput.classList.add('error-input');
-            passwordError.style.display = 'block';
-        } else {
-            passwordInput.classList.remove('error-input');
-            passwordError.style.display = 'none';
-        }
-    });
-</script>
+<script th:src="@{/js/register.js}"></script>
 </body>
 </html>

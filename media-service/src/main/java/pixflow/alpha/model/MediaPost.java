@@ -2,6 +2,7 @@ package pixflow.alpha.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Entity

@@ -35,7 +35,7 @@ public class MediaController {
         return ResponseEntity.ok(mediaService.getAllMediaPosts());
     }
 
-    @DeleteMapping("/posts/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteMediaPost(@PathVariable("id") Long id) {
         mediaService.deleteMediaPost(id);
         return ResponseEntity.noContent().build();

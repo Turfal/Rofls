@@ -1,4 +1,4 @@
-package pixflow.alpha.config;
+package pixflow.alpha.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import pixflow.alpha.util.JwtUtil;
 
 import java.io.IOException;
 

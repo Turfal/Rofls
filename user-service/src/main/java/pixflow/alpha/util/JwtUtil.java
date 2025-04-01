@@ -1,4 +1,4 @@
-package pixflow.alpha.config;
+package pixflow.alpha.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
