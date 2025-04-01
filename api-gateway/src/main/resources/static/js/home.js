@@ -28,13 +28,14 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     window.location.href = '/login?logout=true';
 });
 // Post Modal functionality
+// Post Modal functionality
 const postModal = document.getElementById('postModal');
 const createPostBtn = document.getElementById('createPostBtn');
 const cancelPostBtn = document.getElementById('cancelPost');
 const postTextArea = document.getElementById('postText');
 const charCount = document.getElementById('charCount');
 const postMediaUpload = document.getElementById('postMediaUpload');
-const attachMediaBtn = document.getElementById('attachMediaBtn');
+const attachMediaBtn = document.getElementById('attachImageBtn');
 const mediaPreview = document.getElementById('mediaPreview');
 const previewContainer = document.getElementById('previewContainer');
 const removeMediaBtn = document.getElementById('removeMediaBtn');
@@ -42,53 +43,100 @@ const submitPostBtn = document.getElementById('submitPost');
 let selectedMedia = null;
 let mediaType = null;
 
+// Check if elements exist
+if (!postModal) console.error('postModal not found');
+if (!createPostBtn) console.error('createPostBtn not found');
+if (!cancelPostBtn) console.error('cancelPostBtn not found');
+if (!postTextArea) console.error('postTextArea not found');
+if (!charCount) console.error('charCount not found');
+if (!postMediaUpload) console.error('postMediaUpload not found');
+if (!attachMediaBtn) console.error('attachMediaBtn not found');
+if (!mediaPreview) console.error('mediaPreview not found');
+if (!previewContainer) console.error('previewContainer not found');
+if (!removeMediaBtn) console.error('removeMediaBtn not found');
+if (!submitPostBtn) console.error('submitPostBtn not found');
+
 createPostBtn.addEventListener('click', () => {
+    console.log('Create Post button clicked');
     postModal.style.display = 'flex';
     postTextArea.focus();
 });
+
 cancelPostBtn.addEventListener('click', () => {
+    console.log('Cancel Post button clicked');
     postModal.style.display = 'none';
     resetPostForm();
 });
+
 postTextArea.addEventListener('input', () => {
     const length = postTextArea.value.length;
     charCount.textContent = length;
     charCount.style.color = length > 220 ? '#ff4d4d' : '#888';
 });
+
 attachMediaBtn.addEventListener('click', () => {
+    console.log('Attach Media button clicked');
+    if (!postMediaUpload) {
+        console.error('postMediaUpload element not found');
+        return;
+    }
     postMediaUpload.click();
 });
+
 postMediaUpload.addEventListener('change', () => {
+    console.log('File input changed');
     const file = postMediaUpload.files[0];
     if (file) {
+        console.log('Selected file:', file);
         selectedMedia = file;
 
-        // Определяем тип медиа по MIME типу файла
         if (file.type.startsWith('image/')) {
             mediaType = 'image';
-            // Создаем превью для изображения
             previewContainer.innerHTML = `<img id="previewImg" src="${URL.createObjectURL(file)}" alt="Preview">`;
         } else if (file.type.startsWith('video/')) {
             mediaType = 'video';
-            // Создаем превью для видео
             previewContainer.innerHTML = `
-                <video id="previewVideo" controls>
-                    <source src="${URL.createObjectURL(file)}" type="${file.type}">
-                    Your browser does not support the video tag.
-                </video>`;
+                    <video id="previewVideo" controls>
+                        <source src="${URL.createObjectURL(file)}" type="${file.type}">
+                        Your browser does not support the video tag.
+                    </video>`;
+        } else {
+            console.warn('Unsupported file type:', file.type);
         }
 
+        if (!previewContainer) {
+            console.error('previewContainer element not found');
+            return;
+        }
+        if (!mediaPreview) {
+            console.error('mediaPreview element not found');
+            return;
+        }
         mediaPreview.style.display = 'block';
+    } else {
+        console.log('No file selected');
     }
 });
+
 removeMediaBtn.addEventListener('click', () => {
+    console.log('Remove Media button clicked');
     selectedMedia = null;
     mediaType = null;
     postMediaUpload.value = '';
+    if (!mediaPreview) {
+        console.error('mediaPreview element not found');
+        return;
+    }
+    if (!previewContainer) {
+        console.error('previewContainer element not found');
+        return;
+    }
     mediaPreview.style.display = 'none';
     previewContainer.innerHTML = '';
 });
+
 submitPostBtn.addEventListener('click', async () => {
+    console.log('Submit Post button clicked');
     const postText = postTextArea.value.trim();
     if (!postText && !selectedMedia) {
         alert('Please enter text or attach media');
@@ -97,6 +145,7 @@ submitPostBtn.addEventListener('click', async () => {
     try {
         let mediaUrl = null;
         if (selectedMedia) {
+            console.log('Uploading media:', selectedMedia);
             const formData = new FormData();
             formData.append('file', selectedMedia);
             const response = await fetch('/media/upload', {
@@ -106,17 +155,21 @@ submitPostBtn.addEventListener('click', async () => {
                 },
                 body: formData
             });
-            if (!response.ok) throw new Error('Failed to upload media');
+            if (!response.ok) {
+                console.error('Media upload failed:', response.status, response.statusText);
+                throw new Error('Failed to upload media');
+            }
             const mediaData = await response.json();
-            mediaUrl = mediaData.mediaUrl; // Предполагаем, что сервис возвращает mediaUrl вместо imageUrl
+            console.log('Media upload response:', mediaData);
+            mediaUrl = mediaData.mediaUrl;
         }
 
-        // Обновляем объект postData, чтобы включить тип медиа
         const postData = {
             content: postText,
             mediaUrl: mediaUrl,
             mediaType: mediaType
         };
+        console.log('Post data to be sent:', postData);
 
         const postResponse = await fetch('/posts/create', {
             method: 'POST',
@@ -126,7 +179,11 @@ submitPostBtn.addEventListener('click', async () => {
             },
             body: JSON.stringify(postData)
         });
-        if (!postResponse.ok) throw new Error('Failed to create post');
+        if (!postResponse.ok) {
+            console.error('Post creation failed:', postResponse.status, postResponse.statusText);
+            throw new Error('Failed to create post');
+        }
+        console.log('Post created successfully');
         postModal.style.display = 'none';
         resetPostForm();
         loadPosts();
@@ -135,6 +192,7 @@ submitPostBtn.addEventListener('click', async () => {
         alert('Failed to create post. Please try again.');
     }
 });
+
 function resetPostForm() {
     postTextArea.value = '';
     charCount.textContent = '0';
