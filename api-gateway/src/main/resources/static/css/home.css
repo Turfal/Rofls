@@ -293,7 +293,8 @@ button:hover {
     margin-top: 15px;
     padding-top: 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: transparent; /* Убираем светлый фон */
+    background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон, как у постов */
+    border-radius: 10px; /* Скругленные углы, как у других элементов */
 }
 
 .comments-list {
@@ -302,13 +303,13 @@ button:hover {
 }
 
 .comment-item {
-    padding: 10px 0;
+    padding: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: background 0.3s ease;
+    transition: background 0.3s ease; /* Плавный переход, как у постов */
 }
 
 .comment-item:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.15); /* Эффект наведения, как у постов */
 }
 
 .comment-header {
@@ -322,7 +323,7 @@ button:hover {
 .comment-avatar {
     width: 32px;
     height: 32px;
-    background: #ff007f; /* Цвет аватара в стиле темы */
+    background: #ff007f; /* Основной акцентный цвет темы */
     color: white;
     border-radius: 50%;
     display: flex;
@@ -335,13 +336,13 @@ button:hover {
 
 .comment-author-info {
     flex-grow: 1;
-    min-width: 0; /* Предотвращает переполнение */
+    min-width: 0;
 }
 
 .comment-author {
     font-weight: bold;
     font-size: 14px;
-    color: white;
+    color: white; /* Цвет текста как у остального контента */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -349,15 +350,15 @@ button:hover {
 
 .comment-time {
     font-size: 12px;
-    color: #888;
+    color: #ccc; /* Цвет текста как у времени постов */
 }
 
 .comment-content {
     font-size: 14px;
-    color: #ddd;
-    margin-left: 42px; /* Отступ под аватар */
+    color: white; /* Цвет текста как у постов */
+    margin-left: 42px;
     word-wrap: break-word;
-    line-height: 1.4;
+    line-height: 1.5; /* Высота строки как у постов */
 }
 
 .add-comment {
@@ -365,31 +366,35 @@ button:hover {
     display: flex;
     gap: 10px;
     align-items: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05); /* Легкий полупрозрачный фон */
+    border-radius: 10px; /* Скругленные углы */
 }
 
 .comment-textarea {
     flex-grow: 1;
     padding: 8px 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px; /* Скругленные края как в X */
+    border-radius: 5px; /* Уменьшен радиус для соответствия другим элементам */
     background: rgba(255, 255, 255, 0.05);
     color: white;
     resize: none;
     min-height: 40px;
     font-size: 14px;
+    font-family: 'Arial', sans-serif; /* Шрифт как у body */
     transition: border-color 0.3s ease;
 }
 
 .comment-textarea:focus {
     outline: none;
-    border-color: #ff007f;
+    border-color: #ff007f; /* Акцентный цвет при фокусе */
 }
 
 .submit-comment-btn {
-    background: #ff007f;
+    background: #ff007f; /* Основной цвет кнопок */
     color: white;
     border: none;
-    border-radius: 20px;
+    border-radius: 5px; /* Радиус как у других кнопок */
     padding: 8px 16px;
     cursor: pointer;
     font-size: 14px;
@@ -397,13 +402,13 @@ button:hover {
 }
 
 .submit-comment-btn:hover {
-    background: #ff3399;
+    background: #ff3399; /* Эффект наведения как у других кнопок */
 }
 
 .delete-comment-btn {
     background: none;
     border: none;
-    color: #888;
+    color: #ccc; /* Цвет как у второстепенных элементов */
     cursor: pointer;
     font-size: 14px;
     padding: 5px;
@@ -420,12 +425,89 @@ button:hover {
 }
 
 .delete-comment-btn:hover {
-    color: #ff4d4d;
+    color: #ff4d4d; /* Цвет удаления как в модальных окнах */
 }
 
 .no-comments {
     text-align: left;
-    color: #888;
-    padding: 10px 0;
+    color: #ccc; /* Цвет как у второстепенного текста */
+    padding: 10px;
     font-size: 14px;
+}
+
+/* Show more comments button */
+.show-more-comments {
+    text-align: center;
+    color: #ff007f; /* Основной акцентный цвет */
+    padding: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.show-more-comments:hover {
+    color: #ff3399; /* Эффект наведения как у других элементов */
+}
+
+/* Comment delete confirmation modal */
+.comment-delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Фон как у других модальных окон */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.comment-delete-modal {
+    background: linear-gradient(135deg, #1a1a1a, #333); /* Градиент как у других модальных окон */
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 300px;
+    width: 100%;
+    text-align: center;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); /* Тень как у других модальных окон */
+}
+
+.comment-delete-modal p {
+    margin: 0 0 20px;
+    font-size: 16px;
+}
+
+.comment-delete-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.comment-delete-buttons button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 5px; /* Радиус как у других кнопок */
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+#confirm-delete-comment {
+    background: #ff4d4d; /* Цвет удаления как в других модальных окнах */
+    color: white;
+}
+
+#confirm-delete-comment:hover {
+    background: #cc0000; /* Эффект наведения как у других кнопок удаления */
+}
+
+#cancel-delete-comment {
+    background: #555; /* Цвет отмены как в других модальных окнах */
+    color: white;
+}
+
+#cancel-delete-comment:hover {
+    background: #888; /* Эффект наведения как у других кнопок отмены */
 }
