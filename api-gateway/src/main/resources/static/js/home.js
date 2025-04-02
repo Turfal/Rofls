@@ -220,7 +220,157 @@ function getFormattedMediaUrl(mediaUrl) {
     // Return the properly formatted URL for the media-files endpoint
     return `/media/files/${filename}`;
 }
+//Comments
+// Load comments for a post
+function loadComments(postId) {
+    fetch(`/comments/post/${postId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch comments');
+            return response.json();
+        })
+        .then(comments => {
+            const commentsList = document.getElementById(`comments-list-${postId}`);
+            commentsList.innerHTML = '';
 
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
+                return;
+            }
+
+            comments.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.classList.add('comment-item');
+                commentElement.innerHTML = `
+                    <div class="comment-header">
+                        <div class="comment-avatar">${comment.username[0].toUpperCase()}</div>
+                        <div class="comment-author-info">
+                            <div class="comment-author">${comment.username}</div>
+                            <div class="comment-time">${formatDate(comment.createdAt)}</div>
+                        </div>
+                        ${comment.username === document.getElementById('username').textContent
+                    ? `<button class="delete-comment-btn" data-id="${comment.id}">
+                                <span class="delete-icon">🗑️</span>
+                            </button>`
+                    : ''}
+                    </div>
+                    <div class="comment-content">${comment.content}</div>
+                `;
+                commentsList.appendChild(commentElement);
+            });
+
+            // Add event listeners to delete comment buttons
+            document.querySelectorAll('.delete-comment-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const commentId = e.target.closest('button').getAttribute('data-id');
+                    deleteComment(commentId, postId);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading comments:', error);
+        });
+}
+
+// Submit a new comment
+function submitComment(postId) {
+    const commentText = document.getElementById(`comment-textarea-${postId}`).value.trim();
+
+    if (!commentText) {
+        alert('Please enter a comment');
+        return;
+    }
+
+    const commentData = {
+        postId: postId,
+        content: commentText
+    };
+
+    fetch('/comments/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(commentData)
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to post comment');
+            return response.json();
+        })
+        .then(comment => {
+            // Clear the textarea
+            document.getElementById(`comment-textarea-${postId}`).value = '';
+
+            // Reload comments to show the new one
+            loadComments(postId);
+
+            // Update comment count on the post
+            updateCommentCount(postId);
+        })
+        .catch(error => {
+            console.error('Error posting comment:', error);
+            alert('Failed to post comment. Please try again.');
+        });
+}
+
+// Delete a comment
+function deleteComment(commentId, postId) {
+    if (confirm('Are you sure you want to delete this comment?')) {
+        fetch(`/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to delete comment');
+
+                // Reload comments
+                loadComments(postId);
+
+                // Update comment count on the post
+                updateCommentCount(postId);
+            })
+            .catch(error => {
+                console.error('Error deleting comment:', error);
+                alert('Failed to delete comment. Please try again.');
+            });
+    }
+}
+
+// Update the comment count for a post
+function updateCommentCount(postId) {
+    fetch(`/comments/count/${postId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch comment count');
+            return response.json();
+        })
+        .then(count => {
+            // Find and update the comment count display
+            const commentBtns = document.querySelectorAll(`.comment-btn[data-id="${postId}"]`);
+            commentBtns.forEach(btn => {
+                const countSpan = btn.querySelector('.comment-count');
+                if (countSpan) {
+                    countSpan.textContent = `(${count})`;
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error updating comment count:', error);
+        });
+}
 // Load Posts
 function loadPosts() {
     fetch('/posts/all', {
@@ -237,19 +387,46 @@ function loadPosts() {
         .then(posts => {
             const postsContainer = document.getElementById('postsContainer');
             postsContainer.innerHTML = '';
-            posts.forEach(post => {
+
+            // Process each post and get comment counts
+            const commentCountPromises = posts.map(post =>
+                fetch(`/comments/count/${post.id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                    .then(response => response.json())
+                    .then(count => {
+                        post.commentCount = count;
+                        return post;
+                    })
+                    .catch(error => {
+                        console.error(`Error fetching comment count for post ${post.id}:`, error);
+                        post.commentCount = 0;
+                        return post;
+                    })
+            );
+
+            return Promise.all(commentCountPromises);
+        })
+        .then(postsWithCommentCounts => {
+            const postsContainer = document.getElementById('postsContainer');
+
+            postsWithCommentCounts.forEach(post => {
                 const postElement = document.createElement('div');
                 postElement.classList.add('post-item');
                 let postContent = `
-                        <div class="post-header">
-                            <div class="post-avatar">${post.username[0].toUpperCase()}</div>
-                            <div class="post-author-info">
-                                <div class="post-author">${post.username}</div>
-                                <div class="post-time">${formatDate(post.createdAt)}</div>
-                            </div>
+                    <div class="post-header">
+                        <div class="post-avatar">${post.username[0].toUpperCase()}</div>
+                        <div class="post-author-info">
+                            <div class="post-author">${post.username}</div>
+                            <div class="post-time">${formatDate(post.createdAt)}</div>
                         </div>
-                        <div class="post-content">${post.content || ''}</div>
-                    `;
+                    </div>
+                    <div class="post-content">${post.content || ''}</div>
+                `;
 
                 // Format the media URL correctly before using it
                 const formattedMediaUrl = getFormattedMediaUrl(post.mediaUrl);
@@ -275,26 +452,34 @@ function loadPosts() {
                 }
 
                 postContent += `
-                        <div class="post-footer">
-                            <div class="post-actions">
-                                <button class="like-btn" data-id="${post.id}">
-                                    <span class="like-icon">❤️</span>
-                                    <span class="like-count">${post.likes || 0}</span>
-                                </button>
-                                <button class="comment-btn" data-id="${post.id}">
-                                    <span class="comment-icon">💬</span> Comment
-                                </button>
-                                ${post.username === document.getElementById('username').textContent
+                    <div class="post-footer">
+                        <div class="post-actions">
+                            <button class="like-btn" data-id="${post.id}">
+                                <span class="like-icon">❤️</span>
+                                <span class="like-count">${post.likes || 0}</span>
+                            </button>
+                            <button class="comment-btn" data-id="${post.id}">
+                                <span class="comment-icon">💬</span> Comments <span class="comment-count">(${post.commentCount || 0})</span>
+                            </button>
+                            ${post.username === document.getElementById('username').textContent
                     ? `<button class="delete-post-btn" data-id="${post.id}">
-                                        <span class="delete-icon">🗑️</span> Delete
-                                    </button>`
+                                    <span class="delete-icon">🗑️</span> Delete
+                                </button>`
                     : ''}
+                        </div>
+                        <div class="comments-section" id="comments-section-${post.id}" style="display: none;">
+                            <div class="comments-list" id="comments-list-${post.id}"></div>
+                            <div class="add-comment">
+                                <textarea class="comment-textarea" id="comment-textarea-${post.id}" placeholder="Write a comment..."></textarea>
+                                <button class="submit-comment-btn" data-id="${post.id}">Comment</button>
                             </div>
                         </div>
-                    `;
+                    </div>
+                `;
                 postElement.innerHTML = postContent;
                 postsContainer.appendChild(postElement);
             });
+
             // Like button functionality (client-side only for now)
             document.querySelectorAll('.like-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -310,12 +495,31 @@ function loadPosts() {
                     }
                 });
             });
+
+            // Comment button functionality - toggle comments section
             document.querySelectorAll('.comment-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const postId = e.target.closest('button').getAttribute('data-id');
-                    // Implement comment functionality here
+                    const commentsSection = document.getElementById(`comments-section-${postId}`);
+
+                    if (commentsSection.style.display === 'none') {
+                        commentsSection.style.display = 'block';
+                        loadComments(postId);
+                    } else {
+                        commentsSection.style.display = 'none';
+                    }
                 });
             });
+
+            // Submit comment button functionality
+            document.querySelectorAll('.submit-comment-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const postId = e.target.getAttribute('data-id');
+                    submitComment(postId);
+                });
+            });
+
+            // Delete post functionality
             document.querySelectorAll('.delete-post-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const postId = e.target.closest('button').getAttribute('data-id');
