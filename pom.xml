@@ -17,6 +17,7 @@
         <module>media-service</module>
         <module>post-service</module>
         <module>comment-service</module>
+        <module>profile-service</module>
     </modules>
 
     <properties>
