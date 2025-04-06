@@ -31,15 +31,6 @@ public class UserController {
         return ResponseEntity.ok(convertToDTO(user));
     }
 
-    @GetMapping("/profile/{id}")
-    public ResponseEntity<ProfileDTO> getUserProfile(@PathVariable Long id){
-        User user = userService.findById(id);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(user.getProfile());
-    }
-
     @PostMapping("/register")
     public ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO userDTO, HttpServletRequest request) {
         userService.save(userDTO);

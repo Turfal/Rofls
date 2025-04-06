@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roflogram - Profile</title>
+    <link th:href="@{/css/profile.css}" rel="stylesheet">
+</head>
+<body>
+<div class="header">
+    <h1>Roflogram</h1>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <button id="logoutBtn">Logout</button>
+    </div>
+</div>
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="avatar-container">
+            <img id="profileAvatar" src="/media/files/raw.png" alt="Profile Avatar">
+        </div>
+        <div class="profile-info">
+            <h2 id="profileUsername">Loading...</h2>
+            <div class="stats-container">
+                <div class="stat">
+                    <span id="postsCount">0</span>
+                    <span>posts</span>
+                </div>
+                <div class="stat">
+                    <span id="commentsCount">0</span>
+                    <span>comments</span>
+                </div>
+                <div class="stat">
+                    <span id="ratingValue">0</span>
+                    <span>rating</span>
+                </div>
+            </div>
+            <div class="joined-date">Joined: <span id="joinDate">Loading...</span></div>
+            <div id="editProfileBtnContainer">
+                <!-- Edit profile button will appear here if it's the user's own profile -->
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-bio">
+        <p id="profileBio">Loading bio...</p>
+    </div>
+
+    <div class="activity-stats">
+        <h3>Activity</h3>
+        <div class="activity-grid">
+            <div class="activity-item">
+                <span class="activity-label">Upvotes received:</span>
+                <span id="totalUpvotes">0</span>
+            </div>
+            <div class="activity-item">
+                <span class="activity-label">Downvotes received:</span>
+                <span id="totalDownvotes">0</span>
+            </div>
+            <div class="activity-item">
+                <span class="activity-label">Last active:</span>
+                <span id="lastActive">Loading...</span>
+            </div>
+            <div class="activity-item">
+                <span class="activity-label">Achievements:</span>
+                <span id="achievementsCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="user-posts">
+        <h3 id="postsTitle">Your Posts</h3>
+        <div id="createPostBtnContainer">
+            <!-- Create Post button will appear here if it's the user's own profile -->
+            <button id="createPostBtn">Create Post</button>
+        </div>
+        <div id="recentPostsContainer">
+            <div class="loading-indicator">Loading posts...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <h3>Edit Profile</h3>
+        <div class="form-group">
+            <label for="bioInput">Bio:</label>
+            <textarea id="bioInput" maxlength="200" placeholder="Tell something about yourself..."></textarea>
+            <div class="char-counter"><span id="bioCharCount">0</span>/200</div>
+        </div>
+        <div class="form-group">
+            <label for="avatarUrlInput">Avatar URL:</label>
+            <input type="text" id="avatarUrlInput" placeholder="https://example.com/avatar.jpg">
+            <div class="avatar-preview">
+                <img id="avatarPreview" src="/media/files/raw.png" alt="Avatar Preview">
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button id="saveProfileBtn">Save Changes</button>
+            <button id="cancelEditBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create Post Modal -->
+<div id="postModal" class="modal">
+    <div class="modal-content">
+        <h3>Create Post</h3>
+        <div class="form-group">
+            <textarea id="postText" placeholder="What's on your mind?" maxlength="220"></textarea>
+            <div class="char-counter"><span id="charCount">0</span>/220</div>
+        </div>
+        <div class="form-group">
+            <input type="file" id="postMediaUpload" style="display: none;" accept="image/*,video/*">
+            <button id="attachImageBtn">Attach Media</button>
+            <div id="mediaPreview" style="display: none;">
+                <div id="previewContainer"></div>
+                <button id="removeMediaBtn">Remove</button>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button id="submitPost">Post</button>
+            <button id="cancelPost">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Post Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <p>Are you sure you want to delete this post?</p>
+        <div class="modal-buttons">
+            <button id="confirmDelete">Yes</button>
+            <button id="cancelDelete">No</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden username for comparison -->
+<span id="username" style="display: none;"></span>
+
+<script th:src="@{/js/profile.js}"></script>
+</body>
+</html>

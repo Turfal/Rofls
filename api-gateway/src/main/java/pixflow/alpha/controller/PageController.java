@@ -39,8 +39,14 @@ public class PageController {
     }
 
     @GetMapping("/profile/{userId}")
-    public String userProfilePage(@PathVariable Long userId, Model model) {
+    public String userProfilePage(@PathVariable("userId") Long userId, Model model) {
         model.addAttribute("userId", userId);
+        return "profile";
+    }
+
+    @GetMapping("/profile/username/{username}")
+    public String userProfilePageByUsername(@PathVariable("username") String username, Model model) {
+        model.addAttribute("username", username);
         return "profile";
     }
 }

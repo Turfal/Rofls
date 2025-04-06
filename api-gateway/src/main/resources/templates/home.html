@@ -7,23 +7,40 @@
     <link th:href="@{/css/home.css}" rel="stylesheet">
 </head>
 <body>
-<div class="header">
-    <h1>Roflogram</h1>
-    <div class="user-info">
-        <h2>Welcome, <span id="username"></span>!</h2>
-        <button id="createPostBtn">Create Post</button>
-        <button id="logoutBtn">Logout</button>
+<!-- Header -->
+<header class="header">
+    <div class="header-left">
+        <h1>Roflogram</h1>
     </div>
-</div>
+    <div class="header-center">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search Roflogram">
+            <div id="searchResults" class="search-results"></div>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="user-info">
+            <span>Welcome, <span id="username" th:text="${currentUser?.username}"></span>!</span>
+            <button id="createPostBtn">Post</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="posts-container" id="postsContainer"></div>
+</main>
+
 <!-- Post Creation Modal -->
 <div id="postModal" class="modal">
     <div class="modal-content">
-        <h3>Create New Post</h3>
-        <label for="postText"></label><textarea id="postText" maxlength="250" placeholder="What's on your mind? (250 chars max)"></textarea>
+        <h3>Create a Post</h3>
+        <textarea id="postText" maxlength="250" placeholder="What's happening?"></textarea>
         <div class="char-counter"><span id="charCount">0</span>/250</div>
         <div class="post-media-upload">
             <input type="file" id="postMediaUpload" accept="image/*,video/*">
-            <button id="attachImageBtn">Attach Media</button>
+            <button id="attachImageBtn">Add Media</button>
             <div id="mediaPreview" style="display: none;">
                 <div id="previewContainer"></div>
                 <button id="removeMediaBtn">Remove</button>
@@ -35,6 +52,7 @@
         </div>
     </div>
 </div>
+
 <!-- Delete Confirmation Modal -->
 <div id="deleteModal" class="modal">
     <div class="modal-content">
@@ -45,7 +63,7 @@
         </div>
     </div>
 </div>
-<div id="postsContainer" class="posts-container"></div>
+
 <script th:src="@{/js/home.js}"></script>
 </body>
 </html>

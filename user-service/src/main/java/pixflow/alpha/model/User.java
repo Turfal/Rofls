@@ -20,13 +20,4 @@ public class User {
     private String bio;
     private int rating = 0;
 
-    public ProfileDTO getProfile(){
-        ProfileDTO profileDTO = new ProfileDTO();
-        profileDTO.setId(this.id);
-        profileDTO.setBio(this.bio);
-        profileDTO.setRating(this.rating);
-        profileDTO.setUsername(this.username);
-        return profileDTO;
-    }
-
 }
