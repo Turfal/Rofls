@@ -3,6 +3,7 @@ package pixflow.alpha.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ServerWebExchange;
 
 @Controller
@@ -30,5 +31,16 @@ public class PageController {
     @GetMapping("/")
     public String homePage() {
         return "home";
+    }
+
+    @GetMapping("/profile")
+    public String myProfilePage() {
+        return "profile";
+    }
+
+    @GetMapping("/profile/{userId}")
+    public String userProfilePage(@PathVariable Long userId, Model model) {
+        model.addAttribute("userId", userId);
+        return "profile";
     }
 }
