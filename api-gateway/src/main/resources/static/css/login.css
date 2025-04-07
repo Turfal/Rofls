@@ -1,19 +1,35 @@
+/* Общие стили */
 * {
     box-sizing: border-box;
 }
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #ff007f, #000);
-    background-size: 400% 400%;
-    color: white;
+    background: #0d0d0d; /* Темный фон, как в NeonFlux */
+    color: #ffffff;
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Градиентный фон с анимацией */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ff007a, #0d0d0d, #00ffcc);
+    background-size: 400% 400%;
     animation: gradientAnimation 10s ease infinite;
+    opacity: 0.3; /* Легкая прозрачность для мягкого эффекта */
+    z-index: -1;
 }
 
 @keyframes gradientAnimation {
@@ -27,9 +43,10 @@ body {
     width: 90%;
     margin: 20px;
     padding: 30px;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(26, 26, 26, 0.9); /* Полупрозрачный темный фон, как в NeonFlux */
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3); /* Неоновая тень */
     animation: fadeIn 0.5s ease-in-out;
 }
 
@@ -43,6 +60,8 @@ h2 {
     font-size: 28px;
     font-weight: bold;
     text-align: center;
+    color: #00ffcc; /* Неоновый cyan */
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.5); /* Тень текста */
     letter-spacing: 1px;
 }
 
@@ -57,16 +76,17 @@ label {
     font-size: 14px;
     font-weight: 500;
     text-align: left;
+    color: #00ffcc; /* Неоновый cyan для текста */
 }
 
 input[type="text"],
 input[type="password"] {
     width: 100%;
     padding: 12px;
-    border: 1px solid #555;
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(255, 255, 255, 0.1); /* Полупрозрачный фон */
+    color: #ffffff;
     font-size: 16px;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -74,8 +94,8 @@ input[type="password"] {
 input[type="text"]:focus,
 input[type="password"]:focus {
     outline: none;
-    border-color: #ff007f;
-    box-shadow: 0 0 5px rgba(255, 0, 127, 0.5);
+    border-color: #ff007a; /* Неоновый pink при фокусе */
+    box-shadow: 0 0 5px rgba(255, 0, 122, 0.5); /* Тень в стиле NeonFlux */
 }
 
 input[type="text"]::placeholder,
@@ -84,7 +104,7 @@ input[type="password"]::placeholder {
 }
 
 .error-input {
-    border-color: #ff4d4d;
+    border-color: #ff4d4d; /* Красный для ошибки */
     box-shadow: 0 0 5px rgba(255, 77, 77, 0.5);
 }
 
@@ -97,10 +117,10 @@ input[type="password"]::placeholder {
 }
 
 button {
-    background: #ff007f;
+    background: #00ffcc; /* Неоновый cyan для кнопки */
     border: none;
     padding: 12px;
-    color: white;
+    color: #1a1a1a; /* Черный текст для контраста */
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
@@ -110,7 +130,8 @@ button {
 }
 
 button:hover {
-    background: #ff3399;
+    background: #ff007a; /* Неоновый pink при наведении */
+    color: #ffffff;
 }
 
 button:active {
@@ -132,27 +153,29 @@ button:active {
 }
 
 .success {
-    background-color: rgba(0, 255, 0, 0.2);
-    color: #00ff00;
+    background-color: rgba(0, 255, 204, 0.2); /* Неоновый cyan с прозрачностью */
+    color: #00ffcc;
+    border: 1px solid #00ffcc;
 }
 
 .error {
-    background-color: rgba(255, 0, 0, 0.2);
-    color: #ff4d4d;
+    background-color: rgba(255, 0, 122, 0.2); /* Неоновый pink с прозрачностью */
+    color: #ff007a;
+    border: 1px solid #ff007a;
 }
 
 .register-link {
     margin-top: 20px;
     display: block;
     text-align: center;
-    color: #ff007f;
+    color: #00ffcc; /* Неоновый cyan */
     text-decoration: none;
     font-size: 14px;
     transition: color 0.3s ease;
 }
 
 .register-link:hover {
-    color: #ff3399;
+    color: #ff007a; /* Неоновый pink при наведении */
 }
 
 @media (max-width: 400px) {

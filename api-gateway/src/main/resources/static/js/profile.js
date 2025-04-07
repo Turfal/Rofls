@@ -113,8 +113,8 @@ async function loadProfile(identifier) {
 
 // Display profile data
 function displayProfile(profile) {
-    document.getElementById('profileUsername').textContent = profile.username || 'Unknown';
-    document.getElementById('profileBio').textContent = profile.bio || 'No bio available';
+    document.getElementById('profileUsername').textContent = profile.username || 'Неизвестная нода';
+    document.getElementById('profileBio').textContent = profile.bio || 'Ядро не определено';
     document.getElementById('postsCount').textContent = profile.postsCount || 0;
     document.getElementById('commentsCount').textContent = profile.commentsCount || 0;
     document.getElementById('ratingValue').textContent = profile.rating || 0;
@@ -132,14 +132,13 @@ function displayProfile(profile) {
 
     if (isOwnProfile) {
         const editBtnContainer = document.getElementById('editProfileBtnContainer');
-        editBtnContainer.innerHTML = '<button id="editProfileBtn">Edit Profile</button>';
+        editBtnContainer.innerHTML = '<button id="editProfileBtn" class="edit-node"><i class="fas fa-cog"></i> Настройка</button>';
         document.getElementById('editProfileBtn').addEventListener('click', openEditProfileModal);
     }
 
-    // Обновляем заголовок постов
     const postsTitle = document.getElementById('postsTitle');
     if (postsTitle) {
-        postsTitle.textContent = isOwnProfile ? 'Your Posts' : `${profile.username}'s Posts`;
+        postsTitle.textContent = isOwnProfile ? 'Ваши импульсы' : `Импульсы ${profile.username}`;
     }
 }
 
@@ -185,11 +184,10 @@ async function loadRecentPosts() {
 
         addPostEventListeners();
 
-        // Показываем кнопку "Create Post" только для своего профиля
         const createPostBtnContainer = document.getElementById('createPostBtnContainer');
         if (createPostBtnContainer) {
             if (isOwnProfile) {
-                createPostBtnContainer.innerHTML = '<button id="createPostBtn">Create Post</button>';
+                createPostBtnContainer.innerHTML = '<button id="createPostBtn" class="create-node"><i class="fas fa-plus"></i> Эмиссия</button>';
                 document.getElementById('createPostBtn').addEventListener('click', () => {
                     document.getElementById('postModal').style.display = 'flex';
                     document.getElementById('postText').focus();
@@ -200,7 +198,7 @@ async function loadRecentPosts() {
         }
     } catch (error) {
         console.error('Error loading posts:', error);
-        postsContainer.innerHTML = '<div class="error">Failed to load posts</div>';
+        postsContainer.innerHTML = '<div class="error">Ошибка сканирования импульсов</div>';
     } finally {
         isLoadingPosts = false;
     }
@@ -465,25 +463,28 @@ async function loadComments(postId) {
         const initialComments = comments.slice(0, 5);
         const remainingComments = comments.slice(5);
 
-        const commentElements = await Promise.all(
-            initialComments.map(comment => createCommentElement(comment, postId))
-        );
-        commentElements.forEach(element => commentsList.appendChild(element));
+        // Создаем элементы для первых 5 комментариев
+        initialComments.forEach(comment => {
+            const commentElement = createCommentElement(comment, postId);
+            commentsList.appendChild(commentElement);
+        });
 
+        // Добавляем кнопку "Show more", если есть ещё комментарии
         if (remainingComments.length > 0) {
             const showMoreBtn = document.createElement('div');
             showMoreBtn.classList.add('show-more-comments');
             showMoreBtn.textContent = `View all ${comments.length} comments`;
-            showMoreBtn.addEventListener('click', async () => {
+            showMoreBtn.addEventListener('click', () => {
                 showMoreBtn.remove();
-                const remainingElements = await Promise.all(
-                    remainingComments.map(comment => createCommentElement(comment, postId))
-                );
-                remainingElements.forEach(element => commentsList.appendChild(element));
+                remainingComments.forEach(comment => {
+                    const commentElement = createCommentElement(comment, postId);
+                    commentsList.appendChild(commentElement);
+                });
             });
             commentsList.appendChild(showMoreBtn);
         }
 
+        // Добавляем обработчики для кнопок удаления
         document.querySelectorAll('.delete-comment-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const commentId = e.target.closest('button').getAttribute('data-id');
@@ -495,28 +496,19 @@ async function loadComments(postId) {
         document.getElementById(`comments-list-${postId}`).innerHTML = '<p>Error loading comments.</p>';
     }
 }
-
 // Create comment element with clickable username
-async function createCommentElement(comment, postId) {
+function createCommentElement(comment, postId) {
     const commentElement = document.createElement('div');
     commentElement.classList.add('comment-item');
 
-    let commenterAvatar = '/media/files/raw.png';
-    if (comment.userId) {
-        try {
-            const response = await fetchWithAuth(`/profiles/${comment.userId}`);
-            const commenterProfile = await response.json();
-            commenterAvatar = commenterProfile.avatarUrl || '/media/files/raw.png';
-        } catch (error) {
-            console.error(`Error fetching profile for user ${comment.userId}:`, error);
-        }
-    } else {
-        console.warn(`Comment ${comment.id} has no userId, using default avatar`);
-    }
+    // Определяем аватарку: используем profileData для владельца профиля, иначе дефолт
+    const avatarSrc = (comment.username === profileData.username && profileData.avatarUrl)
+        ? profileData.avatarUrl
+        : '/media/files/raw.png';
 
     commentElement.innerHTML = `
         <div class="comment-header">
-            <img class="comment-avatar" src="${commenterAvatar}" alt="${comment.username}'s avatar">
+            <img class="comment-avatar" src="${avatarSrc}" alt="${comment.username}'s avatar">
             <div class="comment-author-info">
                 <a href="/profile/username/${comment.username}" class="comment-author">${comment.username || 'Unknown'}</a>
                 <div class="comment-time">${formatDate(comment.createdAt)}</div>
@@ -529,6 +521,7 @@ async function createCommentElement(comment, postId) {
         </div>
         <div class="comment-content">${comment.content || ''}</div>
     `;
+
     return commentElement;
 }
 
@@ -657,22 +650,34 @@ async function deletePost() {
     if (!postIdToDelete) return;
 
     try {
+        // 1. Получаем комментарии к посту
         const commentsResponse = await fetchWithAuth(`/comments/post/${postIdToDelete}`);
         const comments = await commentsResponse.json();
-        const deleteCommentPromises = comments.map(comment =>
-            fetchWithAuth(`/comments/delete/${comment.id}`, { method: 'DELETE' })
-        );
-        await Promise.all(deleteCommentPromises);
 
-        await fetchWithAuth(`/media/delete/${postIdToDelete}`, { method: 'DELETE' });
+        // 2. Удаляем все комментарии
+        if (comments.length > 0) {
+            await Promise.all(comments.map(comment =>
+                fetchWithAuth(`/comments/delete/${comment.id}`, { method: 'DELETE' })
+            ));
+        }
+
+        // 3. Удаляем медиа (если есть)
+        await fetchWithAuth(`/media/delete/${postIdToDelete}`, { method: 'DELETE' })
+            .catch(error => {
+                console.warn('No media to delete or error deleting media:', error);
+                // Игнорируем ошибку, если медиа нет
+            });
+
+        // 4. Удаляем сам пост
         await fetchWithAuth(`/posts/delete/${postIdToDelete}`, { method: 'DELETE' });
 
+        // 5. Обновляем страницу
         await loadRecentPosts();
         await loadProfile({ type: 'userId', value: currentUserId });
         alert('Post and associated comments deleted successfully');
     } catch (error) {
         console.error('Error deleting post:', error);
-        alert(`Failed to delete: ${error.message}`);
+        alert(`Failed to delete post: ${error.message}`);
     } finally {
         document.getElementById('deleteModal').style.display = 'none';
         postIdToDelete = null;

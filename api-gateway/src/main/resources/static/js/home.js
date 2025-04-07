@@ -13,9 +13,10 @@ let feedType = 'forYou'; // 'forYou' или 'following'
 async function fetchWithAuth(url, options = {}) {
     const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        ...options.headers // Сохраняем дополнительные заголовки
     };
-    const response = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
+    const response = await fetch(url, { ...options, headers });
     if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
             localStorage.removeItem('jwt_token');
@@ -238,9 +239,12 @@ function createPostElement(post) {
         `<img class="post-media" src="${mediaUrl}" alt="Post image">` :
         `<video class="post-media" controls><source src="${mediaUrl}" type="video/mp4"></video>`) : '';
 
+    // Используем avatarUrl из данных поста, если есть, иначе дефолтную аватарку
+    const avatarSrc = post.avatarUrl || '/media/files/raw.png';
+
     postElement.innerHTML = `
         <div class="post-header">
-            <div class="post-avatar">${post.username[0].toUpperCase()}</div>
+            <img class="post-avatar" src="${avatarSrc}" alt="${post.username}'s avatar">
             <div class="post-author-info">
                 <a href="/profile/username/${post.username}" class="post-author">${post.username}</a>
                 <div class="post-time">${formatDate(post.createdAt)}</div>
@@ -276,18 +280,32 @@ async function loadComments(postId) {
         const response = await fetchWithAuth(`/comments/post/${postId}`);
         const comments = await response.json();
         commentsList.innerHTML = comments.length === 0 ? '<div class="no-comments">No comments yet</div>' :
-            comments.map(comment => `
-                <div class="comment-item">
-                    <div class="comment-header">
-                        <div class="comment-avatar">${comment.username[0].toUpperCase()}</div>
-                        <a href="/profile/username/${comment.username}" class="comment-author">${comment.username}</a>
-                        <div class="comment-time">${formatDate(comment.createdAt)}</div>
-                        ${comment.username === currentUser.username ?
-                `<button class="delete-comment-btn" data-id="${comment.id}">🗑️</button>` : ''}
+            comments.map(comment => {
+                // Используем avatarUrl из данных комментария, если есть, иначе дефолтную аватарку
+                const avatarSrc = comment.avatarUrl || '/media/files/raw.png';
+                return `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <img class="comment-avatar" src="${avatarSrc}" alt="${comment.username}'s avatar">
+                            <div class="comment-author-info">
+                                <a href="/profile/username/${comment.username}" class="comment-author">${comment.username}</a>
+                                <div class="comment-time">${formatDate(comment.createdAt)}</div>
+                            </div>
+                            ${comment.username === currentUser?.username ?
+                    `<button class="delete-comment-btn" data-id="${comment.id}">🗑️</button>` : ''}
+                        </div>
+                        <div class="comment-content">${comment.content}</div>
                     </div>
-                    <div class="comment-content">${comment.content}</div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+
+        // Добавляем обработчики для кнопок удаления
+        commentsList.querySelectorAll('.delete-comment-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const commentId = e.currentTarget.dataset.id;
+                deleteComment(commentId, postId);
+            });
+        });
     } catch (error) {
         console.error('Error loading comments:', error);
         commentsList.innerHTML = '<div class="error">Failed to load comments</div>';
@@ -337,15 +355,38 @@ async function deletePost() {
     if (!postIdToDelete) return;
 
     try {
+        // 1. Получаем комментарии к посту
         const commentsResponse = await fetchWithAuth(`/comments/post/${postIdToDelete}`);
         const comments = await commentsResponse.json();
-        await Promise.all(comments.map(comment =>
-            fetchWithAuth(`/comments/delete/${comment.id}`, { method: 'DELETE' })));
-        await fetchWithAuth(`/media/delete/${postIdToDelete}`, { method: 'DELETE' });
-        await fetchWithAuth(`/posts/delete/${postIdToDelete}`, { method: 'DELETE' });
-        loadPosts();
+
+        // 2. Удаляем все комментарии
+        if (comments.length > 0) {
+            await Promise.all(comments.map(comment =>
+                fetchWithAuth(`/comments/delete/${comment.id}`, { method: 'DELETE' })
+            ));
+        }
+
+        // 3. Удаляем медиа (если есть)
+        await fetchWithAuth(`/media/delete/${postIdToDelete}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).catch(error => {
+            // Игнорируем ошибку, если медиа нет
+            console.warn('No media to delete:', error);
+        });
+
+        // 4. Удаляем сам пост
+        await fetchWithAuth(`/posts/delete/${postIdToDelete}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        // 5. Обновляем список постов
+        await loadPosts();
+        alert('Post deleted successfully');
     } catch (error) {
         console.error('Error deleting post:', error);
+        alert('Failed to delete post: ' + error.message);
     } finally {
         document.getElementById('deleteModal').style.display = 'none';
         postIdToDelete = null;
@@ -417,10 +458,6 @@ function addPostEventListeners() {
             postIdToDelete = e.currentTarget.dataset.id;
             document.getElementById('deleteModal').style.display = 'flex';
         });
-    });
-
-    document.querySelectorAll('.delete-comment-btn').forEach(btn => {
-        btn.addEventListener('click', e => deleteComment(e.currentTarget.dataset.id, e.currentTarget.closest('.comments-section').id.split('-')[2]));
     });
 }
 

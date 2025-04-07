@@ -1,89 +1,126 @@
+/* Общие стили */
 * {
     box-sizing: border-box;
 }
 
 body {
     font-family: 'Arial', sans-serif;
-    color: white;
+    color: #ffffff;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #ff007f, #000);
+    background: #0d0d0d; /* Темный фон как в home.css */
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Градиентный фон с анимацией */
+.neon-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ff007a, #0d0d0d, #00ffcc);
     background-size: 400% 400%;
     animation: gradientAnimation 10s ease infinite;
-    min-height: 100vh;
+    opacity: 0.3; /* Мягкий эффект градиента */
+    z-index: -1;
 }
 
 @keyframes gradientAnimation {
-    0% { background-position: 0 50%; }
+    0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
-    100% { background-position: 0 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-.header {
-    background: rgba(0, 0, 0, 0.8);
-    padding: 15px 20px;
+/* Шапка */
+.flux-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: #1a1a1a; /* Цвет фона как в home.css */
+    border: 1px solid #00ffcc; /* Неоновая граница */
     position: sticky;
-    top: 0;
-    z-index: 100;
+    top: 10px;
+    z-index: 1000;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
 }
 
-.header h1 {
+.flux-brand {
     margin: 0;
-    font-size: 24px;
+    font-size: 1.8em;
+    color: #00ffcc; /* Неоновый cyan */
     font-weight: bold;
-    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
 }
 
-.nav-links a {
-    color: white;
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.matrix-node {
+    background: #2a2a2a;
+    color: #00ffcc; /* Неоновый cyan */
     text-decoration: none;
-    margin-right: 15px;
+    padding: 8px 15px;
+    border-radius: 5px;
     font-size: 14px;
-    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
-.nav-links a:hover {
-    color: #ff007f;
+.matrix-node:hover {
+    background: #ff007a; /* Неоновый pink */
+    color: #ffffff;
 }
 
-#logoutBtn {
-    background: #ff007f;
+.logout-node {
+    background: #ff007a; /* Неоновый pink */
     border: none;
-    color: white;
+    color: #ffffff;
     padding: 8px 15px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
     transition: background 0.3s ease;
 }
 
-#logoutBtn:hover {
-    background: #ff3399;
+.logout-node:hover {
+    background: #ff3399; /* Более светлый pink */
 }
 
+/* Контейнер профиля */
 .profile-container {
     max-width: 800px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.1);
+    margin: 20px auto;
+    background: rgba(26, 26, 26, 0.9); /* Полупрозрачный темный фон */
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3); /* Неоновая тень */
     transition: background 0.3s ease;
 }
 
 .profile-container:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(26, 26, 26, 0.95);
 }
 
 .profile-header {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 255, 204, 0.2);
     padding-bottom: 20px;
 }
 
@@ -93,7 +130,8 @@ body {
     border-radius: 50%;
     overflow: hidden;
     margin-right: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.2);
+    border: 3px solid #00ffcc; /* Неоновая граница */
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
 }
 
 #profileAvatar {
@@ -110,6 +148,8 @@ body {
     margin: 0 0 10px 0;
     font-size: 1.8rem;
     font-weight: bold;
+    color: #00ffcc; /* Неоновый cyan */
+    text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
 }
 
 .stats-container {
@@ -127,46 +167,57 @@ body {
 .stat span:first-child {
     font-weight: bold;
     font-size: 1.2rem;
+    color: #ff007a; /* Неоновый pink */
+}
+
+.stat span:last-child {
+    color: #808080; /* Серый как в home.css */
+    font-size: 0.9rem;
 }
 
 .joined-date {
-    color: #ccc;
+    color: #808080;
     font-size: 0.9rem;
     margin-bottom: 10px;
 }
 
-#editProfileBtn {
-    background: #ff007f;
-    color: white;
+.edit-node {
+    background: #00ffcc; /* Неоновый cyan */
+    color: #1a1a1a;
     border: none;
     padding: 8px 15px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
     transition: background 0.3s ease;
 }
 
-#editProfileBtn:hover {
-    background: #ff3399;
+.edit-node:hover {
+    background: #ff007a; /* Неоновый pink */
+    color: #ffffff;
 }
 
 .profile-bio {
     width: 100%;
     padding: 15px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 255, 204, 0.2);
     margin: 10px 0 20px;
     font-size: 16px;
     line-height: 1.5;
+    color: #ffffff;
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
-.activity-stats {
-    margin-bottom: 20px;
-}
-
-.activity-stats h3 {
+.activity-stats h3,
+.user-posts h3 {
     margin-bottom: 10px;
-    color: white;
+    color: #00ffcc; /* Неоновый cyan */
     font-size: 18px;
+    text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
 }
 
 .activity-grid {
@@ -176,25 +227,40 @@ body {
 }
 
 .activity-item {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 255, 204, 0.1); /* Легкий неоновый фон */
     padding: 10px;
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 6px;
     transition: background 0.3s ease;
 }
 
 .activity-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 255, 204, 0.15);
 }
 
 .activity-label {
-    color: #ccc;
+    color: #808080;
     margin-right: 5px;
 }
 
-.user-posts h3 {
-    margin-bottom: 10px;
-    color: white;
-    font-size: 18px;
+.create-node {
+    background: #00ffcc; /* Неоновый cyan */
+    color: #1a1a1a;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.3s ease;
+}
+
+.create-node:hover {
+    background: #ff007a; /* Неоновый pink */
+    color: #ffffff;
 }
 
 #recentPostsContainer {
@@ -203,28 +269,12 @@ body {
 
 .loading-indicator {
     text-align: center;
-    color: #ccc;
+    color: #808080;
     padding: 20px;
     font-size: 14px;
 }
 
-#createPostBtn {
-    background: #ff007f;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-bottom: 15px;
-    transition: background 0.3s ease;
-}
-
-#createPostBtn:hover {
-    background: #ff3399;
-}
-
-/* Modal Styles */
+/* Модальные окна */
 .modal {
     display: none;
     position: fixed;
@@ -239,15 +289,42 @@ body {
     padding: 20px;
 }
 
-.modal-content {
-    background: linear-gradient(135deg, #1a1a1a, #333);
-    margin: auto;
+.modal-core {
+    background: rgba(26, 26, 26, 0.9); /* Полупрозрачный темный фон */
     padding: 20px;
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 10px;
     width: 80%;
     max-width: 500px;
-    color: white;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+}
+
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.modal-head h3 {
+    margin: 0;
+    color: #00ffcc; /* Неоновый cyan */
+    font-size: 18px;
+    text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+}
+
+.close-node {
+    background: none;
+    border: none;
+    color: #ff007a; /* Неоновый pink */
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-node:hover {
+    color: #ff4d4d;
 }
 
 .form-group {
@@ -258,6 +335,7 @@ body {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    color: #00ffcc; /* Неоновый cyan */
 }
 
 #bioInput, #postText {
@@ -265,9 +343,9 @@ body {
     height: 100px;
     padding: 10px;
     border-radius: 5px;
-    border: 1px solid #555;
-    background: #222;
-    color: white;
+    border: 1px solid #00ffcc; /* Неоновая граница */
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
     resize: none;
     font-size: 14px;
     transition: border-color 0.3s ease;
@@ -275,23 +353,25 @@ body {
 
 #bioInput:focus, #postText:focus {
     outline: none;
-    border-color: #ff007f;
+    border-color: #ff007a; /* Неоновый pink */
+    box-shadow: 0 0 5px rgba(255, 0, 122, 0.5);
 }
 
 #avatarUrlInput {
     width: 100%;
     padding: 10px;
     border-radius: 5px;
-    border: 1px solid #555;
-    background: #222;
-    color: white;
+    border: 1px solid #00ffcc; /* Неоновая граница */
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
     font-size: 14px;
     transition: border-color 0.3s ease;
 }
 
 #avatarUrlInput:focus {
     outline: none;
-    border-color: #ff007f;
+    border-color: #ff007a;
+    box-shadow: 0 0 5px rgba(255, 0, 122, 0.5);
 }
 
 .avatar-preview {
@@ -300,7 +380,8 @@ body {
     margin-top: 10px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid #00ffcc; /* Неоновая граница */
+    box-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
 }
 
 #avatarPreview {
@@ -311,31 +392,19 @@ body {
 
 .char-counter {
     text-align: right;
-    color: #888;
+    color: #808080;
     font-size: 12px;
     margin-top: 5px;
 }
 
-.modal-buttons {
+.modal-actions {
     display: flex;
     justify-content: space-between;
     gap: 10px;
     margin-top: 20px;
 }
 
-#profileBio {
-    word-wrap: break-word; /* Перенос длинных слов */
-    white-space: pre-wrap; /* Сохранение переносов строк и перенос текста */
-    max-width: 100%; /* Ограничение ширины текста */
-    margin: 0; /* Убираем лишние отступы */
-    padding: 5px; /* Небольшой внутренний отступ */
-    line-height: 1.5; /* Улучшает читаемость */
-    /* Опционально: ограничение высоты с прокруткой */
-    max-height: 100px; /* Максимальная высота, например, 100px */
-    overflow-y: auto; /* Прокрутка, если текст превышает высоту */
-}
-
-#saveProfileBtn, #cancelEditBtn, #submitPost, #cancelPost, #confirmDelete, #cancelDelete {
+.submit-node, .cancel-node, .delete-node {
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
@@ -345,148 +414,169 @@ body {
     transition: background 0.3s ease;
 }
 
-#saveProfileBtn, #submitPost {
-    background: #ff007f;
-    color: white;
+.submit-node {
+    background: #00ffcc; /* Неоновый cyan */
+    color: #1a1a1a;
 }
 
-#saveProfileBtn:hover, #submitPost:hover {
-    background: #ff3399;
+.submit-node:hover {
+    background: #ff007a; /* Неоновый pink */
+    color: #ffffff;
 }
 
-#cancelEditBtn, #cancelPost {
-    background: #555;
-    color: white;
+.cancel-node {
+    background: #808080;
+    color: #ffffff;
 }
 
-#cancelEditBtn:hover, #cancelPost:hover {
-    background: #888;
+.cancel-node:hover {
+    background: #ff007a; /* Неоновый pink */
 }
 
-#confirmDelete {
-    background: #ff4d4d;
-    color: white;
+.delete-core {
+    text-align: center;
 }
 
-#confirmDelete:hover {
-    background: #cc0000;
+.delete-node {
+    background: #ff007a; /* Неоновый pink */
+    color: #ffffff;
 }
 
-#cancelDelete {
-    background: #555;
-    color: white;
+.delete-node:hover {
+    background: #ff4d4d; /* Более яркий красный */
 }
 
-#cancelDelete:hover {
-    background: #888;
-}
-
-#mediaPreview {
+.media-flux {
     margin: 10px 0;
     max-width: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 10px;
     padding: 10px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 255, 204, 0.1);
+    position: relative;
+}
+
+.preview-flux {
     display: flex;
     justify-content: center;
 }
 
-#previewContainer img, #previewContainer video {
+.preview-flux img, .preview-flux video {
     max-width: 100%;
     max-height: 300px;
     border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
 }
 
-#previewContainer video {
+.preview-flux video {
     background-color: #000;
 }
 
-#attachImageBtn, #removeMediaBtn {
-    background: #ff007f;
+.attach-node, .remove-node {
+    background: #00ffcc; /* Неоновый cyan */
     border: none;
     padding: 8px 15px;
     border-radius: 5px;
     cursor: pointer;
-    color: white;
+    color: #1a1a1a;
     font-size: 14px;
     margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
     transition: background 0.3s ease;
 }
 
-#attachImageBtn:hover, #removeMediaBtn:hover {
-    background: #ff3399;
+.attach-node:hover, .remove-node:hover {
+    background: #ff007a; /* Неоновый pink */
+    color: #ffffff;
 }
 
-/* Post and Comment Styles */
+.remove-node {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 5px;
+}
+
+/* Стили постов */
 .post-item {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(26, 26, 26, 0.9); /* Полупрозрачный темный фон */
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 10px;
-    padding: 15px; /* Увеличено с 10px обратно до 15px */
-    margin-bottom: 15px; /* Увеличено с 10px обратно до 15px */
-    transition: background 0.3s ease;
-    max-width: 600px; /* Увеличено с 400px до 600px */
+    padding: 15px;
+    margin-bottom: 15px;
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    transition: background 0.3s ease;
 }
 
 .post-item:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(26, 26, 26, 0.95);
 }
 
 .post-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px; /* Увеличено с 8px обратно до 10px */
+    margin-bottom: 10px;
 }
 
 .post-avatar {
-    width: 40px; /* Увеличено с 32px обратно до 40px */
-    height: 40px; /* Увеличено с 32px обратно до 40px */
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: #ff007f;
+    object-fit: cover;
+    border: 2px solid #00ffcc; /* Неоновая граница */
+    box-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+}
+
+.post-author-info {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 18px; /* Увеличено с 16px обратно до 18px */
-    font-weight: bold;
-    color: white;
+    gap: 10px;
 }
 
 .post-author {
     font-weight: bold;
-    font-size: 16px; /* Увеличено с 14px обратно до 16px */
+    font-size: 16px;
+    color: #00ffcc; /* Неоновый cyan */
+    text-decoration: none;
+}
+
+.post-author:hover {
+    color: #ff007a; /* Неоновый pink */
 }
 
 .post-time {
-    color: #ccc;
-    font-size: 12px; /* Увеличено с 10px обратно до 12px */
-    margin-left: auto;
+    color: #808080;
+    font-size: 12px;
 }
 
 .post-content {
-    margin: 10px 0; /* Увеличено с 8px обратно до 10px */
+    margin: 10px 0;
     word-wrap: break-word;
-    font-size: 16px; /* Увеличено с 14px обратно до 16px */
-    line-height: 1.5; /* Увеличено с 1.4 обратно до 1.5 */
-    color: white;
+    white-space: pre-wrap;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #ffffff;
 }
 
 .post-media {
-    margin: 10px auto; /* Увеличено с 8px обратно до 10px */
+    margin: 10px auto;
     border-radius: 10px;
     overflow: hidden;
     max-width: 100%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
     display: flex;
     justify-content: center;
 }
 
 .post-media img, .post-media video {
     max-width: 100%;
-    max-height: 300px; /* Ограничение высоты для медиа */
+    max-height: 300px;
     border-radius: 10px;
 }
 
@@ -494,90 +584,98 @@ body {
     background-color: #000;
 }
 
+.post-footer {
+    margin-top: 10px;
+}
+
 .post-actions {
     display: flex;
-    gap: 15px; /* Увеличено с 10px обратно до 15px */
-    color: #ccc;
+    gap: 15px;
+    color: #00ffcc; /* Неоновый cyan */
 }
 
 .like-btn, .comment-btn, .delete-post-btn {
     cursor: pointer;
     background: none;
     border: none;
-    color: white;
+    color: #00ffcc;
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 14px; /* Увеличено с 12px обратно до 14px */
+    font-size: 14px;
     transition: color 0.3s ease;
 }
 
 .like-btn:hover, .comment-btn:hover, .delete-post-btn:hover {
-    color: #ff007f;
+    color: #ff007a; /* Неоновый pink */
 }
 
 .like-btn.liked {
-    color: #ff007f;
+    color: #ff007a;
 }
 
 .comments-section {
-    margin-top: 10px; /* Уменьшено с 15px */
-    padding-top: 8px; /* Уменьшено с 10px */
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+    padding: 8px;
+    border-top: 1px solid rgba(0, 255, 204, 0.2);
+    background: rgba(0, 255, 204, 0.1);
     border-radius: 10px;
 }
 
 .comment-item {
-    padding: 8px; /* Уменьшено с 10px */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px;
+    border-bottom: 1px solid rgba(0, 255, 204, 0.05);
     transition: background 0.3s ease;
 }
 
 .comment-item:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 255, 204, 0.15);
 }
 
 .comment-header {
     display: flex;
     align-items: center;
-    gap: 8px; /* Уменьшено с 10px */
-    margin-bottom: 4px; /* Уменьшено с 5px */
+    gap: 8px;
+    margin-bottom: 4px;
 }
 
 .comment-avatar {
-    width: 28px; /* Уменьшено с 32px */
-    height: 28px; /* Уменьшено с 32px */
-    background: #ff007f;
-    color: white;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 12px; /* Уменьшено с 14px */
+    object-fit: cover;
+    border: 2px solid #00ffcc; /* Неоновая граница */
+    box-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
 }
 
 .comment-author-info {
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .comment-author {
     font-weight: bold;
-    font-size: 12px; /* Уменьшено с 14px */
-    color: white;
+    font-size: 12px;
+    color: #00ffcc; /* Неоновый cyan */
+    text-decoration: none;
+}
+
+.comment-author:hover {
+    color: #ff007a; /* Неоновый pink */
 }
 
 .comment-time {
-    color: #ccc;
-    font-size: 10px; /* Уменьшено с 12px */
+    color: #808080;
+    font-size: 10px;
 }
 
 .delete-comment-btn {
     background: none;
     border: none;
     cursor: pointer;
-    color: #ccc;
+    color: #ff007a; /* Неоновый pink */
     transition: color 0.3s ease;
 }
 
@@ -586,68 +684,70 @@ body {
 }
 
 .no-comments {
-    color: #ccc;
-    padding: 8px; /* Уменьшено с 10px */
-    font-size: 12px; /* Уменьшено с 14px */
+    color: #808080;
+    padding: 8px;
+    font-size: 12px;
 }
 
 .show-more-comments {
-    color: #ff007f;
+    color: #00ffcc; /* Неоновый cyan */
     cursor: pointer;
-    padding: 8px; /* Уменьшено с 10px */
-    font-size: 12px; /* Уменьшено с 14px */
+    padding: 8px;
+    font-size: 12px;
     font-weight: bold;
     transition: color 0.3s ease;
 }
 
 .show-more-comments:hover {
-    color: #ff3399;
+    color: #ff007a; /* Неоновый pink */
 }
 
 .add-comment {
-    margin-top: 8px; /* Уменьшено с 10px */
+    margin-top: 8px;
     display: flex;
-    gap: 8px; /* Уменьшено с 10px */
+    gap: 8px;
     align-items: center;
-    padding: 8px; /* Уменьшено с 10px */
-    background: rgba(255, 255, 255, 0.05);
+    padding: 8px;
+    background: rgba(0, 255, 204, 0.1);
     border-radius: 10px;
 }
 
 .comment-textarea {
     flex-grow: 1;
-    padding: 6px 10px; /* Уменьшено с 8px 12px */
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 10px;
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 5px;
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
     resize: none;
-    min-height: 36px; /* Уменьшено с 40px */
-    font-size: 12px; /* Уменьшено с 14px */
+    min-height: 36px;
+    font-size: 12px;
     transition: border-color 0.3s ease;
 }
 
 .comment-textarea:focus {
     outline: none;
-    border-color: #ff007f;
+    border-color: #ff007a; /* Неоновый pink */
+    box-shadow: 0 0 5px rgba(255, 0, 122, 0.5);
 }
 
 .submit-comment-btn {
-    background: #ff007f;
-    color: white;
+    background: #00ffcc; /* Неоновый cyan */
+    color: #1a1a1a;
     border: none;
-    padding: 6px 12px; /* Уменьшено с 8px 16px */
+    padding: 6px 12px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 12px; /* Уменьшено с 14px */
+    font-size: 12px;
     transition: background 0.3s ease;
 }
 
 .submit-comment-btn:hover {
-    background: #ff3399;
+    background: #ff007a; /* Неоновый pink */
+    color: #ffffff;
 }
 
-/* Comment Delete Modal */
+/* Модальное окно удаления комментария */
 .comment-delete-modal-overlay {
     position: fixed;
     z-index: 1001;
@@ -662,14 +762,15 @@ body {
 }
 
 .comment-delete-modal {
-    background: linear-gradient(135deg, #1a1a1a, #333);
+    background: rgba(26, 26, 26, 0.9); /* Полупрозрачный темный фон */
     padding: 20px;
+    border: 1px solid #00ffcc; /* Неоновая граница */
     border-radius: 10px;
     text-align: center;
-    color: white;
+    color: #ffffff;
     max-width: 300px;
     width: 100%;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
 }
 
 .comment-delete-buttons {
@@ -688,49 +789,58 @@ body {
 }
 
 #confirm-delete-comment {
-    background: #ff4d4d;
-    color: white;
+    background: #ff007a; /* Неоновый pink */
+    color: #ffffff;
 }
 
 #confirm-delete-comment:hover {
-    background: #cc0000;
+    background: #ff4d4d;
 }
 
 #cancel-delete-comment {
-    background: #555;
-    color: white;
+    background: #808080;
+    color: #ffffff;
 }
 
 #cancel-delete-comment:hover {
-    background: #888;
+    background: #ff007a; /* Неоновый pink */
 }
 
-/* Responsive Design */
+/* Адаптивность */
 @media (max-width: 600px) {
-    .header {
+    .flux-header {
         flex-direction: column;
         gap: 10px;
     }
-    .header h1 {
+    .flux-brand {
         font-size: 20px;
     }
     .profile-container {
-        max-width: 800px; /* Ограничение ширины контейнера */
-        margin: 0 auto;
-        padding: 20px;
+        max-width: 90%;
+        margin: 10px auto;
+        padding: 15px;
+    }
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
     .avatar-container {
         width: 100px;
         height: 100px;
+        margin-right: 0;
+        margin-bottom: 15px;
     }
     #profileUsername {
-        font-sizeGov: 1.5rem;
+        font-size: 1.5rem;
     }
     .stats-container {
         flex-direction: column;
         gap: 10px;
     }
+    .activity-grid {
+        grid-template-columns: 1fr;
+    }
     .post-item {
-        max-width: 90%; /* Уменьшено для мобильных устройств */
+        max-width: 90%;
     }
 }
