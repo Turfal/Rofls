@@ -18,6 +18,7 @@
         <module>post-service</module>
         <module>comment-service</module>
         <module>profile-service</module>
+        <module>chat-service</module>
     </modules>
 
     <properties>
