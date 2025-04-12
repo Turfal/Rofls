@@ -722,3 +722,94 @@ body {
 .delete-node:hover {
     background: #ff4d4d;
 }
+
+/* Styles for repost functionality */
+
+/* Repost button in post footer */
+.repost-btn {
+    background: none;
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.3s ease;
+}
+
+.repost-btn:hover {
+    color: #ff007a;
+}
+
+.repost-icon {
+    display: inline-block;
+    transform: rotate(90deg);
+}
+
+/* Repost modal */
+#repostModal .modal-core {
+    max-width: 400px;
+    width: 90%;
+}
+
+.repost-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.repost-option {
+    background: #2a2a2a;
+    border: 1px solid #00ffcc;
+    border-radius: 8px;
+    padding: 15px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.repost-option:hover {
+    background: rgba(0, 255, 204, 0.1);
+    border-color: #ff007a;
+    color: #ff007a;
+}
+
+.repost-option i {
+    font-size: 18px;
+}
+
+.conversation-select {
+    width: 100%;
+    padding: 12px;
+    background: #2a2a2a;
+    border: 1px solid #00ffcc;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.conversation-select:focus {
+    outline: none;
+    border-color: #ff007a;
+    box-shadow: 0 0 5px rgba(255, 0, 122, 0.5);
+}
+
+/* Repost indicator in posts */
+.repost-indicator {
+    color: #ff007a;
+    font-style: italic;
+    font-size: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.repost-indicator i {
+    transform: rotate(90deg);
+}

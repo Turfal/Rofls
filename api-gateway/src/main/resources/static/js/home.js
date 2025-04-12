@@ -4,6 +4,7 @@ if (!token) {
 }
 
 let currentUser = null;
+let postIdToRepost = null;
 let postIdToDelete = null;
 let selectedMedia = null;
 let mediaType = null;
@@ -259,6 +260,9 @@ function createPostElement(post) {
             <button class="comment-btn" data-id="${post.id}">
                 <span class="comment-icon">💬</span> Comments <span class="comment-count">(${post.commentCount || 0})</span>
             </button>
+            <button class="repost-btn" data-id="${post.id}">
+                <span class="repost-icon">🔄</span> Repost
+            </button>
             ${post.username === currentUser.username ?
         `<button class="delete-post-btn" data-id="${post.id}">🗑️ Delete</button>` : ''}
         </div>
@@ -449,6 +453,13 @@ function addPostEventListeners() {
         });
     });
 
+    document.querySelectorAll('.repost-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const postId = e.currentTarget.dataset.id;
+            showRepostModal(postId);
+        });
+    });
+
     document.querySelectorAll('.submit-comment-btn').forEach(btn => {
         btn.addEventListener('click', e => submitComment(e.currentTarget.dataset.id));
     });
@@ -460,6 +471,142 @@ function addPostEventListeners() {
         });
     });
 }
+
+// Show repost modal
+function showRepostModal(postId) {
+    // Create modal for repost options if it doesn't exist
+    if (!document.getElementById('repostModal')) {
+        const modalHTML = `
+            <div id="repostModal" class="modal">
+                <div class="modal-core">
+                    <div class="modal-head">
+                        <h2>Repost Options</h2>
+                        <button id="closeRepostModal" class="close-node">×</button>
+                    </div>
+                    <div class="repost-options">
+                        <button id="repostToFeed" class="repost-option">
+                            <i class="fas fa-stream"></i> Repost to feed
+                        </button>
+                        <button id="repostToChat" class="repost-option">
+                            <i class="fas fa-comments"></i> Share in conversation
+                        </button>
+                    </div>
+                    <div id="chatSelectContainer" style="display: none; margin-top: 15px;">
+                        <select id="conversationSelect" class="conversation-select">
+                            <option value="">Select a conversation...</option>
+                        </select>
+                        <button id="confirmRepostToChat" class="submit-node" style="margin-top: 10px;">Share</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHTML;
+        document.body.appendChild(modalContainer.firstElementChild);
+
+        // Add event listeners for the new modal
+        document.getElementById('closeRepostModal').addEventListener('click', () => {
+            document.getElementById('repostModal').style.display = 'none';
+        });
+
+        document.getElementById('repostToFeed').addEventListener('click', () => {
+            repostToFeed(postIdToRepost);
+        });
+
+        document.getElementById('repostToChat').addEventListener('click', async () => {
+            const chatSelectContainer = document.getElementById('chatSelectContainer');
+            chatSelectContainer.style.display = 'block';
+
+            // Load conversations
+            try {
+                const response = await fetchWithAuth('/conversations/list');
+                const conversations = await response.json();
+
+                const select = document.getElementById('conversationSelect');
+                select.innerHTML = '<option value="">Select a conversation...</option>';
+
+                conversations.forEach(conv => {
+                    const option = document.createElement('option');
+                    option.value = conv.id;
+                    option.textContent = conv.title;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading conversations:', error);
+            }
+        });
+
+        document.getElementById('confirmRepostToChat').addEventListener('click', () => {
+            const conversationId = document.getElementById('conversationSelect').value;
+            if (conversationId) {
+                repostToChat(postIdToRepost, conversationId);
+            }
+        });
+    }
+
+    // Set the post ID and show the modal
+    postIdToRepost = postId;
+    document.getElementById('repostModal').style.display = 'flex';
+    document.getElementById('chatSelectContainer').style.display = 'none';
+}
+
+// Handle repost to feed
+async function repostToFeed(postId) {
+    try {
+        // Fetch the original post
+        const response = await fetchWithAuth(`/posts/${postId}`);
+        const post = await response.json();
+
+        // Create a new post with attribution
+        const repostContent = `Reposted from @${post.username}: ${post.content}`;
+        const repostData = {
+            content: repostContent,
+            mediaUrl: post.mediaUrl,
+            mediaType: post.mediaType
+        };
+
+        await fetchWithAuth('/posts/create', {
+            method: 'POST',
+            body: JSON.stringify(repostData)
+        });
+
+        // Close modal and refresh feed
+        document.getElementById('repostModal').style.display = 'none';
+        loadPosts();
+
+        // Show success message
+        alert('Post reposted successfully!');
+    } catch (error) {
+        console.error('Error reposting to feed:', error);
+        alert('Failed to repost. Please try again.');
+    }
+}
+
+// Handle repost to chat
+async function repostToChat(postId, conversationId) {
+    try {
+        const repostData = {
+            postId: postId,
+            conversationId: conversationId
+        };
+
+        await fetchWithAuth('/repost/toConversation', {
+            method: 'POST',
+            body: JSON.stringify(repostData)
+        });
+
+        // Close modal
+        document.getElementById('repostModal').style.display = 'none';
+
+        // Show success message
+        alert('Post shared in conversation successfully!');
+    } catch (error) {
+        console.error('Error sharing to conversation:', error);
+        alert('Failed to share. Please try again.');
+    }
+}
+
 
 document.getElementById('confirmDelete').addEventListener('click', deletePost);
 document.getElementById('cancelDelete').addEventListener('click', () => {

@@ -4,6 +4,9 @@ let currentUsername = null;
 let currentConversationId = null;
 let conversations = [];
 let token = localStorage.getItem('jwt_token');
+let selectedMedia = null;
+let mediaType = null;
+let postIdToRepost = null;
 
 // Check if the user is authenticated
 (function checkAuth() {
@@ -25,6 +28,78 @@ function initializeChat() {
     document.getElementById('createNewChat').addEventListener('click', createNewConversation);
     document.querySelector('.close-modal').addEventListener('click', hideNewChatModal);
     document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+
+    // Media attachment
+    const attachMediaBtn = document.getElementById('attachMediaBtn');
+    const mediaInput = document.getElementById('mediaInput');
+
+    if (attachMediaBtn && mediaInput) {
+        attachMediaBtn.addEventListener('click', () => {
+            mediaInput.click();
+        });
+
+        mediaInput.addEventListener('change', handleMediaSelection);
+    }
+
+    // Remove media button
+    const mediaPreview = document.getElementById('mediaPreview');
+    if (mediaPreview) {
+        const removeMediaBtn = mediaPreview.querySelector('.remove-media-btn');
+        if (removeMediaBtn) {
+            removeMediaBtn.addEventListener('click', resetMediaSelection);
+        }
+    }
+
+    // Repost modal events
+    const repostModal = document.getElementById('repostModal');
+    if (repostModal) {
+        document.getElementById('closeRepostModal').addEventListener('click', () => {
+            repostModal.style.display = 'none';
+        });
+
+        document.getElementById('repostToFeed').addEventListener('click', () => {
+            if (postIdToRepost) {
+                repostToFeed(postIdToRepost);
+            }
+        });
+
+        document.getElementById('repostToChat').addEventListener('click', async () => {
+            const chatSelectContainer = document.getElementById('chatSelectContainer');
+            if (chatSelectContainer) {
+                chatSelectContainer.style.display = 'block';
+
+                // Load conversations
+                try {
+                    const response = await fetchWithAuth('/conversations/list');
+                    const conversations = await response.json();
+
+                    const select = document.getElementById('conversationSelect');
+                    if (select) {
+                        select.innerHTML = '<option value="">Выберите беседу...</option>';
+
+                        conversations.forEach(conv => {
+                            const option = document.createElement('option');
+                            option.value = conv.id;
+                            option.textContent = conv.title;
+                            select.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading conversations:', error);
+                }
+            }
+        });
+
+        document.getElementById('confirmRepostToChat').addEventListener('click', () => {
+            const conversationSelect = document.getElementById('conversationSelect');
+            if (conversationSelect && postIdToRepost) {
+                const conversationId = conversationSelect.value;
+                if (conversationId) {
+                    repostToChat(postIdToRepost, conversationId);
+                }
+            }
+        });
+    }
 
     // Message input auto-resize and enter key handling
     const messageInput = document.getElementById('messageInput');
@@ -250,9 +325,28 @@ function renderMessages(messages) {
         const messageElement = document.createElement('div');
         messageElement.className = `message-bubble ${message.sender === currentUsername ? 'outgoing' : 'incoming'}`;
 
+        // Prepare media content if present
+        let mediaContent = '';
+        if (message.mediaUrl) {
+            const formattedMediaUrl = getFormattedMediaUrl(message.mediaUrl);
+            if (message.mediaType === 'image') {
+                mediaContent = `<div class="message-media"><img src="${formattedMediaUrl}" alt="Image" class="media-content"></div>`;
+            } else if (message.mediaType === 'video') {
+                mediaContent = `<div class="message-media"><video controls class="media-content"><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
+            }
+        }
+
+        // Handle reposted content
+        let repostContent = '';
+        if (message.isRepost && message.originalPostId) {
+            repostContent = `<div class="repost-indicator">🔄 Reposted content</div>`;
+        }
+
         messageElement.innerHTML = `
             <div class="message-sender">${message.sender}</div>
-            <div class="message-content">${message.content}</div>
+            ${repostContent}
+            <div class="message-content">${message.content || ''}</div>
+            ${mediaContent}
             <div class="message-time">${formatTime(message.sentAt)}</div>
         `;
 
@@ -319,9 +413,28 @@ function onMessageReceived(payload) {
             const messageElement = document.createElement('div');
             messageElement.className = `message-bubble ${data.message.sender === currentUsername ? 'outgoing' : 'incoming'}`;
 
+            // Prepare media content if present
+            let mediaContent = '';
+            if (data.message.mediaUrl) {
+                const formattedMediaUrl = getFormattedMediaUrl(data.message.mediaUrl);
+                if (data.message.mediaType === 'image') {
+                    mediaContent = `<div class="message-media"><img src="${formattedMediaUrl}" alt="Image" class="media-content"></div>`;
+                } else if (data.message.mediaType === 'video') {
+                    mediaContent = `<div class="message-media"><video controls class="media-content"><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
+                }
+            }
+
+            // Handle reposted content
+            let repostContent = '';
+            if (data.message.isRepost && data.message.originalPostId) {
+                repostContent = `<div class="repost-indicator">🔄 Reposted content</div>`;
+            }
+
             messageElement.innerHTML = `
                 <div class="message-sender">${data.message.sender}</div>
-                <div class="message-content">${data.message.content}</div>
+                ${repostContent}
+                <div class="message-content">${data.message.content || ''}</div>
+                ${mediaContent}
                 <div class="message-time">${formatTime(data.message.sentAt)}</div>
             `;
 
@@ -367,20 +480,27 @@ function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
 
-    if (!content || !currentConversationId) {
+    if ((!content && !selectedMedia) || !currentConversationId) {
         return;
     }
 
+    // Clear input field before sending
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+
+    // If there's media, upload it first
+    if (selectedMedia) {
+        uploadAndSendMediaMessage(content);
+        return;
+    }
+
+    // Otherwise, send a regular text message
     const messageData = {
         conversationId: currentConversationId,
         content: content
     };
 
     try {
-        // Clear input field before sending
-        messageInput.value = '';
-        messageInput.style.height = 'auto';
-
         // Use WebSocket to send message if connected
         if (stompClient && stompClient.connected) {
             stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(messageData));
@@ -392,6 +512,51 @@ function sendMessage() {
         console.error('Error sending message:', error);
         // Fallback to REST API on error
         sendMessageREST(messageData);
+    }
+}
+
+// Function to upload media and then send a message with it
+async function uploadAndSendMediaMessage(content) {
+    try {
+        // Create form data for file upload
+        const formData = new FormData();
+        formData.append('file', selectedMedia);
+
+        // Upload the file
+        const response = await fetch('/media/upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to upload media');
+        }
+
+        const mediaData = await response.json();
+
+        // Create message with media
+        const messageData = {
+            conversationId: currentConversationId,
+            content: content,
+            mediaUrl: mediaData.imageUrl,
+            mediaType: selectedMedia.type.startsWith('image/') ? 'image' : 'video'
+        };
+
+        // Reset selected media
+        resetMediaSelection();
+
+        // Send the message
+        if (stompClient && stompClient.connected) {
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(messageData));
+        } else {
+            sendMessageREST(messageData);
+        }
+    } catch (error) {
+        console.error('Error uploading media:', error);
+        alert('Failed to upload media. Please try again.');
     }
 }
 
@@ -409,12 +574,25 @@ async function sendMessageREST(messageData) {
         // Manually append the message to the chat
         const messagesList = document.getElementById('messagesList');
 
+        // Create and append the new message
         const messageElement = document.createElement('div');
         messageElement.className = 'message-bubble outgoing';
 
+        // Prepare media content if present
+        let mediaContent = '';
+        if (messageData.mediaUrl) {
+            const formattedMediaUrl = getFormattedMediaUrl(messageData.mediaUrl);
+            if (messageData.mediaType === 'image') {
+                mediaContent = `<div class="message-media"><img src="${formattedMediaUrl}" alt="Image" class="media-content"></div>`;
+            } else if (messageData.mediaType === 'video') {
+                mediaContent = `<div class="message-media"><video controls class="media-content"><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
+            }
+        }
+
         messageElement.innerHTML = `
             <div class="message-sender">${currentUsername}</div>
-            <div class="message-content">${messageData.content}</div>
+            <div class="message-content">${messageData.content || ''}</div>
+            ${mediaContent}
             <div class="message-time">${formatTime(new Date())}</div>
         `;
 
@@ -425,6 +603,125 @@ async function sendMessageREST(messageData) {
         console.error('Error sending message via REST:', error);
         alert('Ошибка отправки сообщения. Пожалуйста, попробуйте еще раз.');
     }
+}
+
+// Handle media file selection
+function handleMediaSelection(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    selectedMedia = file;
+    mediaType = file.type.startsWith('image/') ? 'image' : 'video';
+
+    // Display preview
+    const previewContent = document.querySelector('.preview-content');
+    if (previewContent) {
+        if (mediaType === 'image') {
+            previewContent.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Image preview">`;
+        } else {
+            previewContent.innerHTML = `<video controls><source src="${URL.createObjectURL(file)}" type="${file.type}"></video>`;
+        }
+
+        document.getElementById('mediaPreview').style.display = 'block';
+    }
+}
+
+// Reset media selection
+function resetMediaSelection() {
+    selectedMedia = null;
+    mediaType = null;
+
+    // Clear file input
+    const mediaInput = document.getElementById('mediaInput');
+    if (mediaInput) {
+        mediaInput.value = '';
+    }
+
+    // Hide media preview
+    const mediaPreview = document.getElementById('mediaPreview');
+    if (mediaPreview) {
+        mediaPreview.style.display = 'none';
+        const previewContent = mediaPreview.querySelector('.preview-content');
+        if (previewContent) {
+            previewContent.innerHTML = '';
+        }
+    }
+}
+
+// Function to handle repost to feed
+async function repostToFeed(postId) {
+    try {
+        // Fetch the original post
+        const response = await fetchWithAuth(`/posts/${postId}`);
+        const post = await response.json();
+
+        // Create a new post with attribution
+        const repostContent = `🔄 Reposted from @${post.username}: ${post.content}`;
+        const repostData = {
+            content: repostContent,
+            mediaUrl: post.mediaUrl,
+            mediaType: post.mediaType
+        };
+
+        await fetchWithAuth('/posts/create', {
+            method: 'POST',
+            body: JSON.stringify(repostData)
+        });
+
+        // Close modal
+        const repostModal = document.getElementById('repostModal');
+        if (repostModal) {
+            repostModal.style.display = 'none';
+        }
+
+        // Show success message
+        alert('Импульс успешно репостнут!');
+    } catch (error) {
+        console.error('Error reposting to feed:', error);
+        alert('Не удалось репостнуть импульс. Пожалуйста, попробуйте снова.');
+    }
+}
+
+// Function to handle repost to chat
+async function repostToChat(postId, conversationId) {
+    try {
+        const repostData = {
+            postId: postId,
+            conversationId: conversationId
+        };
+
+        // Используем fetchWithAuth для добавления токена авторизации
+        const response = await fetchWithAuth('/repost/toConversation', {
+            method: 'POST',
+            body: JSON.stringify(repostData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка при репосте: ${response.status} ${response.statusText}`);
+        }
+
+        // Close modal
+        const repostModal = document.getElementById('repostModal');
+        if (repostModal) {
+            repostModal.style.display = 'none';
+        }
+
+        // Show success message
+        alert('Импульс успешно отправлен в беседу!');
+    } catch (error) {
+        console.error('Error reposting to chat:', error);
+        alert('Не удалось отправить импульс в беседу. Пожалуйста, попробуйте снова.');
+    }
+}
+
+// Add function to format media URL if needed
+function getFormattedMediaUrl(mediaUrl) {
+    if (!mediaUrl) return '';
+    if (mediaUrl.startsWith('/media/files/')) return mediaUrl;
+    if (mediaUrl.startsWith('/pixflow-media/')) return mediaUrl;
+
+    // Fix URL if needed
+    return `/media/files/${mediaUrl.split('/').pop()}`;
 }
 
 // Create new conversation

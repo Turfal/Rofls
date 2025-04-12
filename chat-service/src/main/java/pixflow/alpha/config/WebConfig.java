@@ -18,7 +18,8 @@ public class WebConfig {
     public FilterRegistrationBean<JwtTokenFilter> jwtFilter() {
         FilterRegistrationBean<JwtTokenFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(jwtTokenFilter);
-        registrationBean.addUrlPatterns("/conversations/*", "/messages/*"); // Apply filter to chat endpoints
+        // Добавляем новый паттерн URL для /repost/* endpoint
+        registrationBean.addUrlPatterns("/conversations/*", "/messages/*", "/repost/*");
         return registrationBean;
     }
 }

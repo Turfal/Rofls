@@ -53,6 +53,12 @@
 
       <!-- Область сообщений -->
       <div class="messages-container" id="messagesContainer">
+        <!-- Область предпросмотра медиа (добавлено) -->
+        <div id="mediaPreview" class="media-preview" style="display: none;">
+          <div class="preview-content"></div>
+          <button class="remove-media-btn"><i class="fas fa-times"></i></button>
+        </div>
+
         <div class="welcome-screen" id="welcomeScreen">
           <div class="welcome-content">
             <i class="fas fa-comment-dots welcome-icon"></i>
@@ -68,6 +74,12 @@
       <!-- Поле ввода сообщения -->
       <div class="message-input-container" id="messageInputContainer" style="display: none;">
         <textarea id="messageInput" placeholder="Введите сообщение..." rows="1"></textarea>
+        <!-- Кнопка прикрепления файлов (добавлено) -->
+        <button id="attachMediaBtn" class="attach-media-btn">
+          <i class="fas fa-paperclip"></i>
+        </button>
+        <input type="file" id="mediaInput" accept="image/*,video/*" style="display: none;">
+
         <button id="sendMessageBtn" class="send-btn">
           <i class="fas fa-paper-plane"></i>
         </button>
@@ -84,7 +96,7 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="chatTitle">Название беседы</label>
+          <label for="chatTitleInput">Название беседы</label>
           <input type="text" id="chatTitleInput" placeholder="Введите название беседы">
         </div>
         <div class="form-group">
@@ -95,6 +107,32 @@
       <div class="modal-footer">
         <button id="cancelNewChat" class="cancel-btn">Отмена</button>
         <button id="createNewChat" class="create-btn">Создать</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для репоста (добавлено) -->
+  <div id="repostModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Опции репоста</h3>
+        <span id="closeRepostModal" class="close-modal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="repost-options">
+          <button id="repostToFeed" class="repost-option">
+            <i class="fas fa-stream"></i> Репост в ленту
+          </button>
+          <button id="repostToChat" class="repost-option">
+            <i class="fas fa-comments"></i> Поделиться в беседе
+          </button>
+        </div>
+        <div id="chatSelectContainer" style="display: none; margin-top: 15px;">
+          <select id="conversationSelect" class="conversation-select">
+            <option value="">Выберите беседу...</option>
+          </select>
+          <button id="confirmRepostToChat" class="submit-node" style="margin-top: 10px;">Поделиться</button>
+        </div>
       </div>
     </div>
   </div>
