@@ -49,4 +49,20 @@ public class PageController {
         model.addAttribute("username", username);
         return "profile";
     }
+
+    @GetMapping("/chat")
+    public String chatPage() {
+        return "chat";
+    }
+
+    @GetMapping("/chat/{conversationId}")
+    public String conversationPage(@PathVariable("conversationId") Long conversationId, Model model) {
+        model.addAttribute("conversationId", conversationId);
+        return "chat";
+    }
+
+    @GetMapping("/chat/new")
+    public String newChatPage() {
+        return "newchat";
+    }
 }
