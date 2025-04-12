@@ -18,7 +18,7 @@ public class Conversation {
     @Column(nullable = false)
     private String title;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER) // Изменено на EAGER загрузку
     @CollectionTable(name = "conversation_participants", joinColumns = @JoinColumn(name = "conversation_id"))
     @Column(name = "username")
     private Set<String> participants = new HashSet<>();

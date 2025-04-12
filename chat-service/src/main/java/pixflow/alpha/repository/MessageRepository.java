@@ -18,7 +18,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     long countUnreadMessages(@Param("conversationId") Long conversationId, @Param("username") String username);
 
     @Modifying
-    @Transactional
     @Query("UPDATE Message m SET m.read = true WHERE m.conversationId = :conversationId AND m.sender != :username")
     void markMessagesAsRead(@Param("conversationId") Long conversationId, @Param("username") String username);
 }

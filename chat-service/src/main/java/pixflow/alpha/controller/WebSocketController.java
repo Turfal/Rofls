@@ -7,6 +7,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import pixflow.alpha.dto.ChatMessageDTO;
 import pixflow.alpha.dto.CreateMessageDTO;
 import pixflow.alpha.dto.MessageDTO;
@@ -23,6 +24,7 @@ public class WebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat.sendMessage")
+    @Transactional // Добавлена транзакция
     public void sendMessage(@Payload CreateMessageDTO messageDTO, Principal principal) {
         if (principal == null) {
             log.error("Unauthorized attempt to send message");

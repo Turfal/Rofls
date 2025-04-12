@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roflogram - Новый импульс</title>
+  <link rel="stylesheet" th:href="@{/css/chat.css}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .new-chat-container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid #00ffcc;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+    }
+
+    .new-chat-title {
+      color: #00ffcc;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+      text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="chat-container">
+  <!-- Верхняя панель -->
+  <header class="flux-header">
+    <div class="flux-brand">Roflogram</div>
+    <div class="nav-links">
+      <a href="/" class="matrix-node"><i class="fas fa-home"></i> Поток</a>
+      <a href="/profile" class="matrix-node"><i class="fas fa-user"></i> Нода</a>
+      <a href="/chat" class="matrix-node"><i class="fas fa-comment-dots"></i> Все импульсы</a>
+      <button id="logoutBtn" class="logout-node"><i class="fas fa-sign-out-alt"></i> Выход</button>
+    </div>
+  </header>
+
+  <!-- Контейнер для создания нового чата -->
+  <div class="new-chat-container">
+    <h2 class="new-chat-title">Создать новый импульс</h2>
+
+    <div class="form-group">
+      <label for="chatTitle">Название импульса</label>
+      <input type="text" id="chatTitle" placeholder="Введите название беседы">
+    </div>
+
+    <div class="form-group">
+      <label for="chatParticipants">Участники (введите имена через запятую)</label>
+      <input type="text" id="chatParticipants" placeholder="username1, username2, ...">
+    </div>
+
+    <div class="action-buttons">
+      <button id="cancelBtn" class="cancel-btn">Отмена</button>
+      <button id="createChatBtn" class="create-btn">Создать импульс</button>
+    </div>
+  </div>
+</div>
+
+<!-- Подключение скриптов -->
+<script>
+  // Get token from local storage
+  const token = localStorage.getItem('jwt_token');
+
+  // Check if user is authenticated
+  if (!token) {
+    window.location.href = '/login';
+  }
+
+  // Set up event listeners
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    localStorage.removeItem('jwt_token');
+    window.location.href = '/login?logout=true';
+  });
+
+  document.getElementById('cancelBtn').addEventListener('click', function() {
+    window.location.href = '/chat';
+  });
+
+  document.getElementById('createChatBtn').addEventListener('click', async function() {
+    const title = document.getElementById('chatTitle').value.trim();
+    const participantsText = document.getElementById('chatParticipants').value.trim();
+
+    if (!title) {
+      alert('Пожалуйста, введите название беседы');
+      return;
+    }
+
+    if (!participantsText) {
+      alert('Пожалуйста, добавьте хотя бы одного участника');
+      return;
+    }
+
+    // Parse participants
+    const participants = participantsText.split(',')
+            .map(username => username.trim())
+            .filter(username => username);
+
+    try {
+      const response = await fetch('/conversations/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: title,
+          participants: participants
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create conversation');
+      }
+
+      const data = await response.json();
+
+      // Redirect to the new conversation
+      window.location.href = `/chat/${data.id}`;
+
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      alert('Произошла ошибка при создании беседы. Пожалуйста, проверьте имена участников и попробуйте снова.');
+    }
+  });
+</script>
+</body>
+</html>

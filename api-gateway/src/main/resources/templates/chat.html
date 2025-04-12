@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roflogram - Импульсы</title>
+  <link rel="stylesheet" th:href="@{/css/chat.css}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+<div class="chat-container">
+  <!-- Верхняя панель -->
+  <header class="flux-header">
+    <div class="flux-brand">Roflogram</div>
+    <div class="nav-links">
+      <a href="/" class="matrix-node"><i class="fas fa-home"></i> Поток</a>
+      <a href="/profile" class="matrix-node"><i class="fas fa-user"></i> Нода</a>
+      <button id="logoutBtn" class="logout-node"><i class="fas fa-sign-out-alt"></i> Выход</button>
+    </div>
+  </header>
+
+  <!-- Основной контейнер чата -->
+  <div class="chat-wrapper">
+    <!-- Боковая панель с беседами -->
+    <aside class="conversations-panel">
+      <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchConversations" placeholder="Поиск импульсов...">
+      </div>
+      <button id="newChatBtn" class="new-chat-btn">
+        <i class="fas fa-plus"></i> Новый импульс
+      </button>
+      <div class="conversations-list" id="conversationsList">
+        <!-- Список бесед будет загружен сюда -->
+        <div class="loading-indicator">Загрузка импульсов...</div>
+      </div>
+    </aside>
+
+    <!-- Правая панель чата -->
+    <main class="chat-panel">
+      <!-- Заголовок чата с информацией о собеседнике -->
+      <div class="chat-header" id="chatHeader">
+        <div class="default-header" id="defaultHeader">
+          <h2>Выберите беседу или создайте новую</h2>
+        </div>
+        <div class="active-chat-header" id="activeChatHeader" style="display: none;">
+          <div class="chat-info">
+            <h2 id="chatTitle">Название беседы</h2>
+            <div class="participants" id="chatParticipants">Участники: </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Область сообщений -->
+      <div class="messages-container" id="messagesContainer">
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-content">
+            <i class="fas fa-comment-dots welcome-icon"></i>
+            <h3>Добро пожаловать в импульс-обмен</h3>
+            <p>Выберите существующую беседу или создайте новую для обмена импульсами</p>
+          </div>
+        </div>
+        <div id="messagesList" class="messages-list" style="display: none;">
+          <!-- Сообщения будут загружены сюда -->
+        </div>
+      </div>
+
+      <!-- Поле ввода сообщения -->
+      <div class="message-input-container" id="messageInputContainer" style="display: none;">
+        <textarea id="messageInput" placeholder="Введите сообщение..." rows="1"></textarea>
+        <button id="sendMessageBtn" class="send-btn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Модальное окно создания новой беседы -->
+  <div id="newChatModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Новая беседа</h3>
+        <span class="close-modal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="chatTitle">Название беседы</label>
+          <input type="text" id="chatTitleInput" placeholder="Введите название беседы">
+        </div>
+        <div class="form-group">
+          <label for="participantsInput">Участники (введите имена через запятую)</label>
+          <input type="text" id="participantsInput" placeholder="username1, username2, ...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelNewChat" class="cancel-btn">Отмена</button>
+        <button id="createNewChat" class="create-btn">Создать</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Подключение скриптов -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script th:src="@{/js/chat.js}"></script>
+</body>
+</html>

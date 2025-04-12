@@ -3,6 +3,7 @@ package pixflow.alpha.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pixflow.alpha.dto.ConversationDTO;
 import pixflow.alpha.dto.CreateConversationDTO;
 import pixflow.alpha.dto.MessageDTO;
@@ -23,6 +24,7 @@ public class ConversationService {
     private final MessageRepository messageRepository;
     private final MessageService messageService;
 
+    @Transactional
     public ConversationDTO createConversation(CreateConversationDTO createConversationDTO, String creator) {
         if (createConversationDTO.getParticipants() == null || createConversationDTO.getParticipants().isEmpty()) {
             throw new IllegalArgumentException("Conversation must have at least one participant");
@@ -39,12 +41,14 @@ public class ConversationService {
         return convertToDTO(savedConversation, creator);
     }
 
+    @Transactional(readOnly = true)
     public List<ConversationDTO> getUserConversations(String username) {
         return conversationRepository.findByParticipant(username).stream()
                 .map(conversation -> convertToDTO(conversation, username))
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ConversationDTO getConversation(Long conversationId, String username) {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
@@ -56,6 +60,7 @@ public class ConversationService {
         return convertToDTO(conversation, username);
     }
 
+    @Transactional
     public void updateLastMessageTime(Long conversationId) {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));

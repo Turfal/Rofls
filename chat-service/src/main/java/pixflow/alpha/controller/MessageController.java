@@ -52,6 +52,12 @@ public class MessageController {
             return ResponseEntity.status(401).build(); // Unauthorized
         }
 
-        return ResponseEntity.ok(messageService.getConversationMessages(conversationId, username));
+        // Получаем сообщения
+        List<MessageDTO> messages = messageService.getConversationMessages(conversationId, username);
+
+        // В отдельной транзакции отмечаем сообщения как прочитанные
+        messageService.markMessagesAsRead(conversationId, username);
+
+        return ResponseEntity.ok(messages);
     }
 }

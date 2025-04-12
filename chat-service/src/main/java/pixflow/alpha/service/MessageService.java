@@ -3,6 +3,7 @@ package pixflow.alpha.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pixflow.alpha.dto.CreateMessageDTO;
 import pixflow.alpha.dto.MessageDTO;
 import pixflow.alpha.model.Conversation;
@@ -20,11 +21,14 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
 
+    @Transactional
     public MessageDTO createMessage(CreateMessageDTO createMessageDTO, String sender) {
         Conversation conversation = conversationRepository.findById(createMessageDTO.getConversationId())
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
 
-        if (!conversation.getParticipants().contains(sender)) {
+        // Проверка участия пользователя в беседе с EAGER загрузкой
+        boolean isParticipant = conversation.getParticipants().contains(sender);
+        if (!isParticipant) {
             throw new RuntimeException("User is not a participant in this conversation");
         }
 
@@ -42,20 +46,36 @@ public class MessageService {
         return convertToDTO(savedMessage);
     }
 
+    // Разделим метод на два: один для получения сообщений, второй для маркировки их как прочитанных
+    @Transactional(readOnly = true)
     public List<MessageDTO> getConversationMessages(Long conversationId, String username) {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
 
-        if (!conversation.getParticipants().contains(username)) {
+        // Проверка участия пользователя в беседе с EAGER загрузкой
+        boolean isParticipant = conversation.getParticipants().contains(username);
+        if (!isParticipant) {
+            throw new RuntimeException("User is not a participant in this conversation");
+        }
+
+        return messageRepository.findByConversationIdOrderBySentAt(conversationId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void markMessagesAsRead(Long conversationId, String username) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+
+        // Проверка участия пользователя в беседе
+        boolean isParticipant = conversation.getParticipants().contains(username);
+        if (!isParticipant) {
             throw new RuntimeException("User is not a participant in this conversation");
         }
 
         // Mark messages as read
         messageRepository.markMessagesAsRead(conversationId, username);
-
-        return messageRepository.findByConversationIdOrderBySentAt(conversationId).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
     }
 
     public MessageDTO convertToDTO(Message message) {
