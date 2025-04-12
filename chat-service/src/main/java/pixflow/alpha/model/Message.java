@@ -19,8 +19,20 @@ public class Message {
     @Column(nullable = false)
     private String sender;
 
-    @Column(nullable = false, length = 1000)
+    @Column(length = 1000)
     private String content;
+
+    @Column
+    private String mediaUrl;     // URL to media file
+
+    @Column
+    private String mediaType;    // Type of media (image/video)
+
+    @Column
+    private Boolean isRepost = false;    // Flag to indicate if this is a repost
+
+    @Column
+    private Long originalPostId; // ID of the original post (for reposts)
 
     @Column(nullable = false)
     private LocalDateTime sentAt;

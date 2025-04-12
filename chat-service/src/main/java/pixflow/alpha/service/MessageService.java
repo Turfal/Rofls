@@ -37,6 +37,16 @@ public class MessageService {
         message.setSender(sender);
         message.setContent(createMessageDTO.getContent());
 
+        // Set media properties if they exist
+        message.setMediaUrl(createMessageDTO.getMediaUrl());
+        message.setMediaType(createMessageDTO.getMediaType());
+
+        // Set repost properties if this is a repost
+        if (createMessageDTO.getIsRepost() != null && createMessageDTO.getIsRepost()) {
+            message.setIsRepost(true);
+            message.setOriginalPostId(createMessageDTO.getOriginalPostId());
+        }
+
         Message savedMessage = messageRepository.save(message);
 
         // Update conversation's last message time
@@ -84,6 +94,10 @@ public class MessageService {
         dto.setConversationId(message.getConversationId());
         dto.setSender(message.getSender());
         dto.setContent(message.getContent());
+        dto.setMediaUrl(message.getMediaUrl());
+        dto.setMediaType(message.getMediaType());
+        dto.setIsRepost(message.getIsRepost());
+        dto.setOriginalPostId(message.getOriginalPostId());
         dto.setSentAt(message.getSentAt());
         dto.setRead(message.isRead());
         return dto;

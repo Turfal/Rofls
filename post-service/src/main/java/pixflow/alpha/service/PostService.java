@@ -60,6 +60,12 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    public PostDTO getPostById(Long id) {
+        return postRepository.findById(id)
+                .map(this::convertToDTO)
+                .orElse(null);
+    }
+
     public void deletePost(Long id) {
         // Get username from request attributes
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
