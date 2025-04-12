@@ -21,7 +21,7 @@ import pixflow.alpha.service.MessageService;
 public class RepostController {
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     @PostMapping("/toConversation")
     public ResponseEntity<MessageDTO> repostToConversation(
@@ -34,15 +34,24 @@ public class RepostController {
         }
 
         try {
-            // First, get the original post details from post-service
-            ResponseEntity<PostDTO> postResponse = restTemplate.getForEntity(
-                    "http://post-service:8080/posts/" + repostDTO.getPostId(),
-                    PostDTO.class);
+            log.info("Attempting to repost post ID {} to conversation ID {}",
+                    repostDTO.getPostId(), repostDTO.getConversationId());
+
+            // Use direct URL format for now, until service discovery is properly configured
+            String postUrl = "http://localhost:8083/posts/" + repostDTO.getPostId();
+            log.info("Fetching post data from URL: {}", postUrl);
+
+            // First, get the original post details from post-service using direct URL
+            ResponseEntity<PostDTO> postResponse = new RestTemplate().getForEntity(
+                    postUrl, PostDTO.class);
 
             PostDTO post = postResponse.getBody();
             if (post == null) {
+                log.error("Post with ID {} not found", repostDTO.getPostId());
                 return ResponseEntity.notFound().build();
             }
+
+            log.info("Successfully retrieved post: {}", post);
 
             // Create a message DTO for the repost
             CreateMessageDTO createMessageDTO = new CreateMessageDTO();
@@ -55,6 +64,7 @@ public class RepostController {
 
             // Create the message
             MessageDTO message = messageService.createMessage(createMessageDTO, username);
+            log.info("Created repost message: {}", message);
 
             // Notify WebSocket subscribers
             messagingTemplate.convertAndSend(
@@ -64,7 +74,7 @@ public class RepostController {
 
             return ResponseEntity.ok(message);
         } catch (Exception e) {
-            log.error("Error reposting to conversation: {}", e.getMessage());
+            log.error("Error reposting to conversation: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
