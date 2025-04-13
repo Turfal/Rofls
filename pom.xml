@@ -19,6 +19,7 @@
         <module>comment-service</module>
         <module>profile-service</module>
         <module>chat-service</module>
+        <module>follow-service</module>
     </modules>
 
     <properties>

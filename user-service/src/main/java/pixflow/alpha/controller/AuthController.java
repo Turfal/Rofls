@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import pixflow.alpha.dto.ProfileDTO;
@@ -18,6 +19,10 @@ import pixflow.alpha.model.User;
 import pixflow.alpha.service.UserService;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.web.client.RestTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -45,7 +50,14 @@ public class AuthController {
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String token = jwtUtil.generateToken(userDetails);
+
+            // Get user roles for claims
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("roles", userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList()));
+
+            String token = jwtUtil.generateToken(userDetails, claims);
 
             return ResponseEntity.ok(new AuthResponse(token));
         } catch (AuthenticationException e) {
@@ -57,13 +69,13 @@ public class AuthController {
     public ResponseEntity<AuthResponse> register(@RequestBody UserDTO userDTO) {
         User user = userService.save(userDTO);
 
-        // Создаем профиль через REST-запрос с query-параметром
+        // Create profile through REST request with query parameter
         String profileServiceUrl = "http://localhost:8080/profiles/" + user.getId();
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("username", user.getUsername());
         HttpHeaders headers = new HttpHeaders();
 
-        // Генерируем токен для пользователя
+        // Generate token for the user
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         userDTO.getUsername(),
@@ -71,7 +83,14 @@ public class AuthController {
                 )
         );
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(userDetails);
+
+        // Add roles to claims
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()));
+
+        String token = jwtUtil.generateToken(userDetails, claims);
         headers.set("Authorization", "Bearer " + token);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
@@ -102,6 +121,12 @@ public class AuthController {
         UserDTO userDTO = new UserDTO();
         userDTO.setId(user.getId());
         userDTO.setUsername(user.getUsername());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setBio(user.getBio());
+        userDTO.setRating(user.getRating());
+        userDTO.setRoles(user.getRoles());
+        userDTO.setEnabled(user.isEnabled());
+
         return ResponseEntity.ok(userDTO);
     }
 }
