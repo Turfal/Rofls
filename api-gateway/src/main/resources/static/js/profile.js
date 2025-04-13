@@ -114,33 +114,126 @@ async function loadProfile(identifier) {
 
 // Display profile data
 function displayProfile(profile) {
-    document.getElementById('profileUsername').textContent = profile.username || 'Неизвестная нода';
-    document.getElementById('profileBio').textContent = profile.bio || 'Ядро не определено';
-    document.getElementById('postsCount').textContent = profile.postsCount || 0;
-    document.getElementById('commentsCount').textContent = profile.commentsCount || 0;
-    document.getElementById('ratingValue').textContent = profile.rating || 0;
-    document.getElementById('joinDate').textContent = formatDate(profile.joinDate);
-    document.getElementById('lastActive').textContent = formatDateTime(profile.lastActive);
-    document.getElementById('totalUpvotes').textContent = profile.totalUpvotes || 0;
-    document.getElementById('totalDownvotes').textContent = profile.totalDownvotes || 0;
-    document.getElementById('achievementsCount').textContent = profile.achievementsCount || 0;
+    document.getElementById('profileUsername').textContent = profile.username || 'Unknown User';
+    document.getElementById('profileBio').textContent = profile.bio || 'No bio available';
 
-    if (profile.avatarUrl) {
-        document.getElementById('profileAvatar').src = profile.avatarUrl;
-    } else {
-        document.getElementById('profileAvatar').src = '/media/files/raw.png';
+    // Статистика
+    document.getElementById('postsCount').textContent = profile.postsCount !== undefined ? profile.postsCount : 0;
+    document.getElementById('commentsCount').textContent = profile.commentsCount !== undefined ? profile.commentsCount : 0;
+    document.getElementById('ratingValue').textContent = profile.rating !== undefined ? profile.rating : 0;
+
+    // Дополнительная информация
+    document.getElementById('joinDate').textContent = formatDate(profile.joinDate) || 'Unknown';
+    document.getElementById('lastActive').textContent = formatDateTime(profile.lastActive) || 'Unknown';
+    document.getElementById('totalUpvotes').textContent = profile.totalUpvotes !== undefined ? profile.totalUpvotes : 0;
+    document.getElementById('totalDownvotes').textContent = profile.totalDownvotes !== undefined ? profile.totalDownvotes : 0;
+    document.getElementById('achievementsCount').textContent = profile.achievementsCount !== undefined ? profile.achievementsCount : 0;
+
+    // Аватар пользователя
+    const avatarElement = document.getElementById('profileAvatar');
+    if (avatarElement) {
+        if (profile.avatarUrl) {
+            avatarElement.src = profile.avatarUrl;
+        } else {
+            avatarElement.src = '/media/files/raw.png';
+        }
+        // Устанавливаем обработчик ошибки загрузки изображения
+        avatarElement.onerror = function() {
+            this.src = '/media/files/raw.png';
+        };
     }
 
+    // Кнопка редактирования профиля (только если это профиль текущего пользователя)
     if (isOwnProfile) {
         const editBtnContainer = document.getElementById('editProfileBtnContainer');
-        editBtnContainer.innerHTML = '<button id="editProfileBtn" class="edit-node"><i class="fas fa-cog"></i> Настройка</button>';
-        document.getElementById('editProfileBtn').addEventListener('click', openEditProfileModal);
+        if (editBtnContainer) {
+            editBtnContainer.innerHTML = '<button id="editProfileBtn" class="btn btn-primary"><i class="fas fa-cog"></i> Edit Profile</button>';
+            document.getElementById('editProfileBtn').addEventListener('click', openEditProfileModal);
+        }
+    } else {
+        // Если это не профиль текущего пользователя, добавляем кнопки Follow и Friend Request
+        const editBtnContainer = document.getElementById('editProfileBtnContainer');
+        if (editBtnContainer) {
+            // Проверяем статус подписки
+            checkFollowStatus(profile.username).then(isFollowing => {
+                const followBtnClass = isFollowing ? 'btn-secondary' : 'btn-primary';
+                const followBtnText = isFollowing ? 'Unfollow' : 'Follow';
+                const followBtnAction = isFollowing ?
+                    `unfollowUser('${profile.username}')` :
+                    `followUser('${profile.username}')`;
+
+                editBtnContainer.innerHTML = `
+                    <div class="profile-actions">
+                        <button id="followBtn" class="btn ${followBtnClass}" onclick="${followBtnAction}">
+                            <i class="fas fa-user-plus"></i> ${followBtnText}
+                        </button>
+                        <button id="friendBtn" class="btn btn-tertiary" onclick="sendFriendRequest('${profile.username}')">
+                            <i class="fas fa-user-friends"></i> Add Friend
+                        </button>
+                    </div>
+                `;
+
+                // Проверяем статус дружбы
+                checkFriendStatus(profile.username).then(isFriend => {
+                    const friendBtn = document.getElementById('friendBtn');
+                    if (friendBtn && isFriend) {
+                        friendBtn.textContent = 'Friends';
+                        friendBtn.disabled = true;
+                        friendBtn.classList.add('btn-success');
+                    }
+                });
+            });
+        }
     }
 
+    // Обновляем заголовок раздела постов
     const postsTitle = document.getElementById('postsTitle');
     if (postsTitle) {
-        postsTitle.textContent = isOwnProfile ? 'Ваши импульсы' : `Импульсы ${profile.username}`;
+        postsTitle.textContent = isOwnProfile ? 'Your Posts' : `${profile.username}'s Posts`;
     }
+}
+
+async function updateProfileStats() {
+    try {
+        const identifier = getUserIdFromPath() || { type: 'userId', value: currentUserId };
+        const response = await fetchWithAuth(`/profiles/stats/${identifier.value}`);
+        const stats = await response.json();
+
+        // Обновляем счетчики
+        if (stats.postsCount !== undefined) {
+            document.getElementById('postsCount').textContent = stats.postsCount;
+        }
+        if (stats.commentsCount !== undefined) {
+            document.getElementById('commentsCount').textContent = stats.commentsCount;
+        }
+        if (stats.rating !== undefined) {
+            document.getElementById('ratingValue').textContent = stats.rating;
+        }
+
+        // Обновляем дополнительную статистику
+        if (stats.totalUpvotes !== undefined) {
+            document.getElementById('totalUpvotes').textContent = stats.totalUpvotes;
+        }
+        if (stats.totalDownvotes !== undefined) {
+            document.getElementById('totalDownvotes').textContent = stats.totalDownvotes;
+        }
+    } catch (error) {
+        console.error('Error updating profile stats:', error);
+    }
+}
+
+function setupStatisticsUpdate() {
+    // После создания поста
+    document.getElementById('submitPost')?.addEventListener('click', async () => {
+        // Небольшая задержка для того, чтобы сервер успел обработать новый пост
+        setTimeout(updateProfileStats, 1000);
+    });
+
+    // После удаления поста
+    document.getElementById('confirmDelete')?.addEventListener('click', async () => {
+        // Небольшая задержка для того, чтобы сервер успел обработать удаление
+        setTimeout(updateProfileStats, 1000);
+    });
 }
 
 // Load user's posts
@@ -866,6 +959,173 @@ async function updateProfile() {
     } catch (error) {
         console.error('Error updating profile:', error);
         alert('Failed to update profile');
+    }
+}
+
+// Функции для работы с подписками и друзьями
+async function followUser(username) {
+    try {
+        const response = await fetchWithAuth(`/follows/${username}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            // Обновляем UI, показывая что пользователь подписан
+            const followBtn = document.getElementById('followBtn');
+            if (followBtn) {
+                followBtn.textContent = 'Unfollow';
+                followBtn.classList.remove('btn-primary');
+                followBtn.classList.add('btn-secondary');
+                followBtn.onclick = () => unfollowUser(username);
+            }
+
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error following user:', error);
+        return false;
+    }
+}
+
+async function unfollowUser(username) {
+    try {
+        const response = await fetchWithAuth(`/follows/${username}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            // Обновляем UI, показывая что пользователь не подписан
+            const followBtn = document.getElementById('followBtn');
+            if (followBtn) {
+                followBtn.textContent = 'Follow';
+                followBtn.classList.remove('btn-secondary');
+                followBtn.classList.add('btn-primary');
+                followBtn.onclick = () => followUser(username);
+            }
+
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error unfollowing user:', error);
+        return false;
+    }
+}
+
+// Проверка статуса подписки
+async function checkFollowStatus(username) {
+    try {
+        const response = await fetchWithAuth(`/follows/check/${username}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error checking follow status:', error);
+        return false;
+    }
+}
+
+// Отправка запроса в друзья
+async function sendFriendRequest(username) {
+    try {
+        const response = await fetchWithAuth(`/friends/requests/${username}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            // Обновляем UI, чтобы показать, что запрос отправлен
+            const friendBtn = document.getElementById('friendBtn');
+            if (friendBtn) {
+                friendBtn.textContent = 'Request Sent';
+                friendBtn.disabled = true;
+            }
+
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error sending friend request:', error);
+        return false;
+    }
+}
+
+// Проверка статуса дружбы
+async function checkFriendStatus(username) {
+    try {
+        const response = await fetchWithAuth(`/friends/check/${username}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error checking friend status:', error);
+        return false;
+    }
+}
+
+// Получение списка подписок
+async function getFollowing() {
+    try {
+        const response = await fetchWithAuth('/follows/following');
+        return await response.json();
+    } catch (error) {
+        console.error('Error getting following list:', error);
+        return [];
+    }
+}
+
+// Получение списка подписчиков
+async function getFollowers() {
+    try {
+        const response = await fetchWithAuth('/follows/followers');
+        return await response.json();
+    } catch (error) {
+        console.error('Error getting followers list:', error);
+        return [];
+    }
+}
+
+// Получение списка друзей
+async function getFriends() {
+    try {
+        const response = await fetchWithAuth('/friends');
+        return await response.json();
+    } catch (error) {
+        console.error('Error getting friends list:', error);
+        return [];
+    }
+}
+
+// Получение списка ожидающих запросов в друзья
+async function getPendingFriendRequests() {
+    try {
+        const response = await fetchWithAuth('/friends/requests/pending');
+        return await response.json();
+    } catch (error) {
+        console.error('Error getting pending friend requests:', error);
+        return [];
+    }
+}
+
+// Принятие запроса в друзья
+async function acceptFriendRequest(requestId) {
+    try {
+        const response = await fetchWithAuth(`/friends/requests/${requestId}/accept`, {
+            method: 'POST'
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('Error accepting friend request:', error);
+        return false;
+    }
+}
+
+// Отклонение запроса в друзья
+async function rejectFriendRequest(requestId) {
+    try {
+        const response = await fetchWithAuth(`/friends/requests/${requestId}/reject`, {
+            method: 'POST'
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('Error rejecting friend request:', error);
+        return false;
     }
 }
 

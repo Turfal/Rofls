@@ -8,6 +8,55 @@ let selectedMedia = null;
 let mediaType = null;
 let postIdToRepost = null;
 
+// CSS for video player
+const videoPlayerCSS = `
+/* Улучшение видеоплеера */
+video.media-content {
+    width: 100%;
+    max-height: 500px;
+    border-radius: 8px;
+    object-fit: contain;
+    background-color: #000;
+}
+
+/* Обеспечение доступности элементов управления видео */
+video::-webkit-media-controls {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+video::-webkit-media-controls-enclosure {
+    width: 100%;
+    border-radius: 0;
+}
+
+/* Улучшение стиля прогресс-бара видео */
+video::-webkit-media-controls-timeline {
+    height: 8px;
+    margin: 0 10px;
+}
+
+/* Поле для видео контента */
+.message-media {
+    margin: 10px 0;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.05);
+    max-width: 100%;
+}
+
+/* Стили для сообщения об ошибке видео */
+.video-error {
+    color: #ff4d4d;
+    text-align: center;
+    padding: 10px;
+    background-color: rgba(255, 0, 0, 0.1);
+    border-radius: 8px;
+}
+`;
+
 // Check if the user is authenticated
 (function checkAuth() {
     if (!token) {
@@ -18,6 +67,47 @@ let postIdToRepost = null;
     // Get current user info
     getCurrentUser();
 })();
+
+// Fetch with authentication wrapper
+async function fetchWithAuth(url, options = {}) {
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers
+    };
+
+    try {
+        const response = await fetch(url, { ...options, headers });
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                logout();
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response;
+    } catch (error) {
+        console.error(`Error fetching ${url}:`, error);
+        throw error;
+    }
+}
+
+// Get current user information
+async function getCurrentUser() {
+    try {
+        const response = await fetchWithAuth('/auth/me');
+        const userData = await response.json();
+        currentUsername = userData.username;
+        console.log('Current user:', currentUsername);
+
+        // Initialize the chat after getting user info
+        initializeChat();
+    } catch (error) {
+        console.error('Error fetching current user:', error);
+        logout();
+    }
+}
 
 // Initialize the chat application
 function initializeChat() {
@@ -114,49 +204,11 @@ function initializeChat() {
     // Search functionality
     document.getElementById('searchConversations').addEventListener('input', filterConversations);
 
+    // Initialize media players
+    setTimeout(initializeMediaPlayers, 500);
+
     // Load user's conversations
     loadConversations();
-}
-
-// Get current user information
-async function getCurrentUser() {
-    try {
-        const response = await fetchWithAuth('/auth/me');
-        const userData = await response.json();
-        currentUsername = userData.username;
-        console.log('Current user:', currentUsername);
-
-        // Initialize the chat after getting user info
-        initializeChat();
-    } catch (error) {
-        console.error('Error fetching current user:', error);
-        logout();
-    }
-}
-
-// Fetch with authentication wrapper
-async function fetchWithAuth(url, options = {}) {
-    const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        ...options.headers
-    };
-
-    try {
-        const response = await fetch(url, { ...options, headers });
-
-        if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
-                logout();
-            }
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return response;
-    } catch (error) {
-        console.error(`Error fetching ${url}:`, error);
-        throw error;
-    }
 }
 
 // Load user's conversations
@@ -312,7 +364,7 @@ function renderMessages(messages) {
     let previousDate = null;
 
     messages.forEach(message => {
-        // Check if we need to add a date separator
+        // Check if we need souhait add a date separator
         const messageDate = new Date(message.sentAt).toLocaleDateString();
         if (messageDate !== previousDate) {
             const dateSeparator = document.createElement('div');
@@ -330,9 +382,9 @@ function renderMessages(messages) {
         if (message.mediaUrl) {
             const formattedMediaUrl = getFormattedMediaUrl(message.mediaUrl);
             if (message.mediaType === 'image') {
-                mediaContent = `<div class="message-media"><img src="${formattedMediaUrl}" alt="Image" class="media-content"></div>`;
+                mediaContent = `<div class="message-media"><img src="${formattedMediaUrl}" alt="Image" class="media-content" onclick="window.open('${formattedMediaUrl}', '_blank')"></div>`;
             } else if (message.mediaType === 'video') {
-                mediaContent = `<div class="message-media"><video controls class="media-content"><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
+                mediaContent = `<div class="message-media"><video controls class="media-content" preload="metadata" playsinline><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
             }
         }
 
@@ -352,6 +404,9 @@ function renderMessages(messages) {
 
         messagesList.appendChild(messageElement);
     });
+
+    // Инициализируем видеоплееры после рендеринга
+    setupVideoPlayers();
 }
 
 // Connect to WebSocket
@@ -396,9 +451,7 @@ function onMessageReceived(payload) {
 
             // Get the date of the last message
             const lastDateSeparator = messagesList.querySelector('.date-separator:last-child');
-            const lastMessageDate = lastDateSeparator ?
-                lastDateSeparator.textContent :
-                null;
+            const lastMessageDate = lastDateSeparator ? lastDateSeparator.textContent : null;
 
             // Check if we need to add a new date separator
             const messageDate = formatDate(data.message.sentAt);
@@ -418,9 +471,9 @@ function onMessageReceived(payload) {
             if (data.message.mediaUrl) {
                 const formattedMediaUrl = getFormattedMediaUrl(data.message.mediaUrl);
                 if (data.message.mediaType === 'image') {
-                    mediaContent = `<div class="message-media"><img src="${formattedMediaUrl}" alt="Image" class="media-content"></div>`;
+                    mediaContent = `<div class="message-media"><img src="${formattedMediaUrl}" alt="Image" class="media-content" onclick="window.open('${formattedMediaUrl}', '_blank')"></div>`;
                 } else if (data.message.mediaType === 'video') {
-                    mediaContent = `<div class="message-media"><video controls class="media-content"><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
+                    mediaContent = `<div class="message-media"><video controls class="media-content" preload="metadata" playsinline><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
                 }
             }
 
@@ -439,6 +492,9 @@ function onMessageReceived(payload) {
             `;
 
             messagesList.appendChild(messageElement);
+
+            // Инициализируем видеоплееры для нового сообщения
+            setupVideoPlayers();
 
             // Scroll to the bottom
             scrollToBottom();
@@ -585,7 +641,7 @@ async function sendMessageREST(messageData) {
             if (messageData.mediaType === 'image') {
                 mediaContent = `<div class="message-media"><img src="${formattedMediaUrl}" alt="Image" class="media-content"></div>`;
             } else if (messageData.mediaType === 'video') {
-                mediaContent = `<div class="message-media"><video controls class="media-content"><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
+                mediaContent = `<div class="message-media"><video controls class="media-content" preload="metadata" playsinline><source src="${formattedMediaUrl}" type="video/mp4"></video></div>`;
             }
         }
 
@@ -597,6 +653,7 @@ async function sendMessageREST(messageData) {
         `;
 
         messagesList.appendChild(messageElement);
+        setupVideoPlayers();
         scrollToBottom();
 
     } catch (error) {
@@ -717,11 +774,23 @@ async function repostToChat(postId, conversationId) {
 // Add function to format media URL if needed
 function getFormattedMediaUrl(mediaUrl) {
     if (!mediaUrl) return '';
-    if (mediaUrl.startsWith('/media/files/')) return mediaUrl;
-    if (mediaUrl.startsWith('/pixflow-media/')) return mediaUrl;
 
-    // Fix URL if needed
-    return `/media/files/${mediaUrl.split('/').pop()}`;
+    // Если URL уже начинается с /media/files/, оставляем как есть
+    if (mediaUrl.startsWith('/media/files/')) {
+        return mediaUrl;
+    }
+
+    // Если URL начинается с /pixflow-media/, оставляем как есть
+    if (mediaUrl.startsWith('/pixflow-media/')) {
+        return mediaUrl.replace('/pixflow-media/', '/media/files/');
+    }
+
+    // Если URL имеет полный путь, извлекаем только имя файла
+    const parts = mediaUrl.split('/');
+    const filename = parts[parts.length - 1];
+
+    // Формируем правильный URL
+    return `/media/files/${filename}`;
 }
 
 // Create new conversation
@@ -861,6 +930,89 @@ function formatTime(dateString) {
 function logout() {
     localStorage.removeItem('jwt_token');
     window.location.href = '/login?logout=true';
+}
+
+// Add video player styles
+function addVideoPlayerStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = videoPlayerCSS;
+    document.head.appendChild(styleElement);
+}
+
+// Setup video players
+function setupVideoPlayers() {
+    // Добавляем стили
+    addVideoPlayerStyles();
+
+    // Находим все видео в сообщениях
+    const videos = document.querySelectorAll('video.media-content');
+
+    videos.forEach(video => {
+        // Добавляем атрибуты для оптимизации воспроизведения
+        video.setAttribute('playsinline', '');
+        video.setAttribute('preload', 'metadata');
+        video.controls = true;
+
+        // Исправляем перемотку и обеспечиваем загрузку метаданных
+        video.addEventListener('loadedmetadata', function() {
+            this.style.opacity = 1;
+        });
+
+        // Поддержка полноэкранного режима по двойному клику
+        video.addEventListener('dblclick', function() {
+            if (this.requestFullscreen) {
+                this.requestFullscreen();
+            } else if (this.webkitRequestFullscreen) { /* Safari */
+                this.webkitRequestFullscreen();
+            } else if (this.msRequestFullscreen) { /* IE11 */
+                this.msRequestFullscreen();
+            }
+        });
+
+        // Обработка ошибок видео
+        video.addEventListener('error', function() {
+            console.error('Ошибка загрузки видео:', this.src);
+            const errorElement = document.createElement('div');
+            errorElement.className = 'video-error';
+            errorElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Ошибка загрузки видео';
+            this.parentNode.insertBefore(errorElement, this);
+            this.style.display = 'none';
+        });
+    });
+}
+
+// Initialize media players
+function initializeMediaPlayers() {
+    // Вызываем начальную настройку видеоплееров
+    setupVideoPlayers();
+
+    // Наблюдаем за изменениями DOM для инициализации новых видео
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.addedNodes.length) {
+                mutation.addedNodes.forEach(node => {
+                    if (node.querySelectorAll) {
+                        const videos = node.querySelectorAll('video.media-content');
+                        if (videos.length > 0) {
+                            videos.forEach(video => {
+                                video.setAttribute('playsinline', '');
+                                video.setAttribute('preload', 'metadata');
+                                video.controls = true;
+                            });
+                            // Повторно вызываем настройку для новых видео
+                            setupVideoPlayers();
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+    // Наблюдаем за списком сообщений
+    const messagesList = document.getElementById('messagesList');
+    if (messagesList) {
+        observer.observe(messagesList, { childList: true, subtree: true });
+    }
 }
 
 // Handle browser back/forward navigation

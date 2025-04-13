@@ -19,7 +19,7 @@
         </div>
         <div class="user-menu">
             <div class="search-bar">
-                <input type="text" id="searchInput" class="form-control" placeholder="Search..." style="width: 200px;">
+                <label for="searchInput"></label><input type="text" id="searchInput" class="form-control" placeholder="Search..." style="width: 200px;">
                 <div id="searchResults" class="search-results hidden"></div>
             </div>
             <div class="avatar" id="username-initial"></div>
@@ -47,14 +47,7 @@
                 </button>
             </div>
         </div>
-        <div class="sidebar-section mb-lg">
-            <h4 class="mb-sm">Trends</h4>
-            <div id="trendsContainer" class="trends-list"></div>
-        </div>
-        <div class="sidebar-section">
-            <h4 class="mb-sm">Suggested Users</h4>
-            <div id="suggestedUsers" class="suggested-users"></div>
-        </div>
+        <!-- Удалены блоки Trends и Suggested Users -->
     </aside>
 
     <main class="content">
@@ -71,7 +64,7 @@
             <h4 class="modal-title">Create Post</h4>
             <span id="cancelPost" class="modal-close">&times;</span>
         </div>
-        <textarea id="postText" class="form-control mb-sm" maxlength="250" placeholder="What's on your mind?"></textarea>
+        <label for="postText"></label><textarea id="postText" class="form-control mb-sm" maxlength="250" placeholder="What's on your mind?"></textarea>
         <div class="char-counter mb-md"><span id="charCount">0</span>/250</div>
 
         <div id="mediaPreview" class="media-preview" style="display: none;">

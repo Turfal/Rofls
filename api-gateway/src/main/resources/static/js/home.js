@@ -9,7 +9,72 @@ let postIdToDelete = null;
 let selectedMedia = null;
 let mediaType = null;
 let feedType = 'forYou'; // 'forYou' or 'following'
+const videoPlayerCSS = `
+/* Улучшение видеоплеера */
+video.post-media, video.media-content {
+    width: 100%;
+    max-height: 500px;
+    border-radius: 8px;
+    object-fit: contain;
+    background-color: #000;
+}
 
+/* Обеспечение доступности элементов управления видео */
+video::-webkit-media-controls {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+video::-webkit-media-controls-enclosure {
+    width: 100%;
+    border-radius: 0;
+}
+
+/* Улучшение стиля прогресс-бара видео */
+video::-webkit-media-controls-timeline {
+    height: 8px;
+    margin: 0 10px;
+}
+
+/* Поле для видео контента */
+.post-media-container, .message-media {
+    margin: 10px 0;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.05);
+    max-width: 100%;
+}
+
+/* Попап для полноэкранного просмотра видео */
+.video-fullscreen-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.video-fullscreen-container video {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.video-fullscreen-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+}
+`;
 // Fetch wrapper with authentication
 async function fetchWithAuth(url, options = {}) {
     // Don't modify headers for FormData/multipart
@@ -80,26 +145,28 @@ if (searchInput && searchResults) {
         }
 
         try {
+            // Делаем только поиск пользователей, т.к. поиск постов менее полезен
             const usersResponse = await fetchWithAuth(`/profiles/search?query=${encodeURIComponent(query)}`);
-            const postsResponse = await fetchWithAuth(`/posts/search?query=${encodeURIComponent(query)}`);
             const users = await usersResponse.json();
-            const posts = await postsResponse.json();
 
             searchResults.innerHTML = '';
-            if (users.length === 0 && posts.length === 0) {
-                searchResults.innerHTML = '<div class="no-results">No results found</div>';
+            if (users.length === 0) {
+                searchResults.innerHTML = '<div class="no-results">No users found</div>';
             } else {
-                users.slice(0, 5).forEach(user => {
+                // Показываем до 10 результатов пользователей
+                users.slice(0, 10).forEach(user => {
                     const userDiv = document.createElement('div');
                     userDiv.className = 'search-result-item';
-                    userDiv.innerHTML = `<a href="/profile/username/${user.username}">${user.username}</a>`;
+
+                    // Добавляем аватар пользователя
+                    const avatarSrc = user.avatarUrl || '/media/files/raw.png';
+                    userDiv.innerHTML = `
+                        <a href="/profile/username/${user.username}" class="search-result-link">
+                            <img src="${avatarSrc}" alt="${user.username}" class="search-result-avatar">
+                            <span class="search-result-username">${user.username}</span>
+                        </a>
+                    `;
                     searchResults.appendChild(userDiv);
-                });
-                posts.slice(0, 5).forEach(post => {
-                    const postDiv = document.createElement('div');
-                    postDiv.className = 'search-result-item';
-                    postDiv.innerHTML = `<a href="/post/${post.id}">${post.content.substring(0, 50)}${post.content.length > 50 ? '...' : ''}</a>`;
-                    searchResults.appendChild(postDiv);
                 });
             }
             searchResults.style.display = 'block';
@@ -108,6 +175,13 @@ if (searchInput && searchResults) {
             searchResults.innerHTML = '<div class="error">Search failed</div>';
         }
     }, 300));
+
+    // Скрываем результаты поиска при клике вне элемента
+    document.addEventListener('click', (event) => {
+        if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
 }
 
 function debounce(func, wait) {
@@ -279,11 +353,12 @@ async function loadPosts() {
     postsContainer.innerHTML = '<div class="loading-indicator">Loading posts...</div>';
 
     try {
+        // Определяем URL в зависимости от типа ленты
         const url = feedType === 'forYou' ? '/posts/all' : '/posts/following';
         const response = await fetchWithAuth(url);
         const posts = await response.json();
 
-        // Get comment counts for each post
+        // Получаем количество комментариев для постов
         const postsWithComments = await Promise.all(posts.map(async post => {
             try {
                 const countResponse = await fetchWithAuth(`/comments/count/${post.id}`);
@@ -298,7 +373,12 @@ async function loadPosts() {
         postsContainer.innerHTML = '';
 
         if (postsWithComments.length === 0) {
-            postsContainer.innerHTML = '<div class="no-posts">No posts found</div>';
+            // Устанавливаем соответствующее сообщение в зависимости от типа ленты
+            if (feedType === 'following') {
+                postsContainer.innerHTML = '<div class="no-posts">You are not following anyone yet, or the people you follow haven\'t posted anything.</div>';
+            } else {
+                postsContainer.innerHTML = '<div class="no-posts">No posts found</div>';
+            }
             isLoadingPosts = false;
             return;
         }
@@ -308,6 +388,9 @@ async function loadPosts() {
         });
 
         addPostEventListeners();
+
+        // Инициализация плееров для видео
+        setupVideoPlayers();
     } catch (error) {
         console.error('Error loading posts:', error);
         postsContainer.innerHTML = '<div class="error">Failed to load posts</div>';
@@ -321,14 +404,33 @@ function createPostElement(post) {
     postElement.className = 'post-item';
     postElement.dataset.postId = post.id;
 
+    // Проверяем наличие медиа и получаем форматированный URL
     const mediaUrl = getFormattedMediaUrl(post.mediaUrl);
-    const mediaContent = mediaUrl ? (post.mediaType === 'image' ?
-        `<img class="post-media" src="${mediaUrl}" alt="Post image">` :
-        `<video class="post-media" controls><source src="${mediaUrl}" type="video/mp4"></video>`) : '';
 
-    // Use default avatar if none provided
+    // Создаем HTML для медиа в зависимости от типа (изображение или видео)
+    let mediaContent = '';
+    if (mediaUrl) {
+        if (post.mediaType === 'image') {
+            // Для изображений добавляем возможность открытия в новом окне при клике
+            mediaContent = `<div class="post-media-container">
+                              <img class="post-media" src="${mediaUrl}" alt="Post image" 
+                                   onclick="window.open('${mediaUrl}', '_blank')">
+                            </div>`;
+        } else if (post.mediaType === 'video') {
+            // Для видео добавляем элемент управления
+            mediaContent = `<div class="post-media-container">
+                              <video class="post-media" controls playsinline>
+                                <source src="${mediaUrl}" type="video/mp4">
+                                Your browser does not support video playback.
+                              </video>
+                            </div>`;
+        }
+    }
+
+    // Используем аватар по умолчанию, если не предоставлен
     const avatarSrc = post.avatarUrl || '/media/files/raw.png';
 
+    // Формируем HTML для поста
     postElement.innerHTML = `
         <div class="post-header">
             <img class="post-avatar" src="${avatarSrc}" alt="${post.username}'s avatar">
@@ -361,6 +463,172 @@ function createPostElement(post) {
         </div>
     `;
     return postElement;
+}
+
+async function loadFollowingPosts() {
+    if (isLoadingPosts) return;
+    isLoadingPosts = true;
+
+    const postsContainer = document.getElementById('postsContainer');
+    if (!postsContainer) {
+        isLoadingPosts = false;
+        return;
+    }
+
+    postsContainer.innerHTML = '<div class="loading-indicator">Loading posts from people you follow...</div>';
+
+    try {
+        // Получаем список подписок
+        const followingResponse = await fetchWithAuth('/follows/following');
+        const following = await followingResponse.json();
+
+        if (following.length === 0) {
+            postsContainer.innerHTML = '<div class="no-posts">You are not following anyone yet. Follow some users to see their posts here.</div>';
+            isLoadingPosts = false;
+            return;
+        }
+
+        // Получаем посты от подписок
+        const response = await fetchWithAuth('/posts/following');
+        const posts = await response.json();
+
+        // Получаем количество комментариев для постов
+        const postsWithComments = await Promise.all(posts.map(async post => {
+            try {
+                const countResponse = await fetchWithAuth(`/comments/count/${post.id}`);
+                post.commentCount = await countResponse.json();
+            } catch (error) {
+                console.error(`Error fetching comment count for post ${post.id}:`, error);
+                post.commentCount = 0;
+            }
+            return post;
+        }));
+
+        postsContainer.innerHTML = '';
+
+        if (postsWithComments.length === 0) {
+            postsContainer.innerHTML = '<div class="no-posts">The people you follow haven\'t posted anything yet.</div>';
+            isLoadingPosts = false;
+            return;
+        }
+
+        postsWithComments.forEach(post => {
+            postsContainer.appendChild(createPostElement(post));
+        });
+
+        addPostEventListeners();
+
+        // Инициализация плееров для видео
+        setupVideoPlayers();
+    } catch (error) {
+        console.error('Error loading following posts:', error);
+        postsContainer.innerHTML = '<div class="error">Failed to load posts from people you follow</div>';
+    } finally {
+        isLoadingPosts = false;
+    }
+}
+
+function addVideoPlayerStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = videoPlayerCSS;
+    document.head.appendChild(styleElement);
+}
+
+function setupVideoPlayers() {
+    // Добавляем стили
+    addVideoPlayerStyles();
+
+    // Находим все видео на странице
+    const videos = document.querySelectorAll('video.post-media, video.media-content');
+
+    videos.forEach(video => {
+        // Добавляем ориентацию
+        video.setAttribute('playsinline', '');
+
+        // Устанавливаем настройки плеера
+        video.controls = true;
+
+        // Исправляем проблему с перемоткой добавлением дополнительных атрибутов
+        video.setAttribute('preload', 'metadata');
+
+        // Добавляем поддержку полноэкранного режима
+        video.addEventListener('dblclick', function() {
+            if (this.requestFullscreen) {
+                this.requestFullscreen();
+            } else if (this.webkitRequestFullscreen) { /* Safari */
+                this.webkitRequestFullscreen();
+            } else if (this.msRequestFullscreen) { /* IE11 */
+                this.msRequestFullscreen();
+            }
+        });
+
+        // Исправление проблем с перемоткой: загружаем метаданные перед взаимодействием
+        video.addEventListener('loadedmetadata', function() {
+            // Видео готово к использованию
+            this.style.opacity = 1;
+        });
+
+        // Добавляем обработку ошибок
+        video.addEventListener('error', function() {
+            console.error('Ошибка загрузки видео:', this.src);
+            // Показываем сообщение об ошибке
+            const errorElement = document.createElement('div');
+            errorElement.className = 'video-error';
+            errorElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading video';
+            this.parentNode.insertBefore(errorElement, this);
+            this.style.display = 'none';
+        });
+    });
+}
+
+function createVideoElement(mediaUrl) {
+    return `
+        <div class="post-media-container">
+            <video class="post-media" controls playsinline preload="metadata">
+                <source src="${mediaUrl}" type="video/mp4">
+                Your browser does not support video playback.
+            </video>
+        </div>
+    `;
+}
+
+function initializeMediaPlayers() {
+    // Вызываем настройку видеоплееров
+    setupVideoPlayers();
+
+    // Наблюдаем за изменениями DOM для инициализации новых видео
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.addedNodes.length) {
+                mutation.addedNodes.forEach(node => {
+                    if (node.querySelectorAll) {
+                        const videos = node.querySelectorAll('video');
+                        if (videos.length > 0) {
+                            // Инициализируем новые видео
+                            videos.forEach(video => {
+                                // Добавляем атрибуты для улучшения перемотки
+                                video.setAttribute('playsinline', '');
+                                video.setAttribute('preload', 'metadata');
+                                video.controls = true;
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+    // Начинаем наблюдение за изменениями в контейнере постов
+    const postsContainer = document.getElementById('postsContainer');
+    if (postsContainer) {
+        observer.observe(postsContainer, { childList: true, subtree: true });
+    }
+
+    // Также наблюдаем за сообщениями в чате
+    const messagesList = document.getElementById('messagesList');
+    if (messagesList) {
+        observer.observe(messagesList, { childList: true, subtree: true });
+    }
 }
 
 // Comments
@@ -746,7 +1014,7 @@ function setupFeedTypeSwitching() {
             feedType = 'forYou';
             forYouBtn.classList.add('active');
             if (followingBtn) followingBtn.classList.remove('active');
-            loadPosts();
+            loadPosts(); // Загрузка всех постов
         });
     }
 
@@ -755,7 +1023,7 @@ function setupFeedTypeSwitching() {
             feedType = 'following';
             followingBtn.classList.add('active');
             if (forYouBtn) forYouBtn.classList.remove('active');
-            loadPosts();
+            loadFollowingPosts(); // Загрузка постов от подписок
         });
     }
 }
@@ -809,8 +1077,23 @@ function formatDate(dateString) {
 
 function getFormattedMediaUrl(mediaUrl) {
     if (!mediaUrl) return null;
-    if (mediaUrl.startsWith('/media/files/') || mediaUrl.startsWith('/pixflow-media/')) return mediaUrl;
-    return `/media/files/${mediaUrl.split('/').pop()}`;
+
+    // Если URL уже начинается с /media/files/, оставляем как есть
+    if (mediaUrl.startsWith('/media/files/')) {
+        return mediaUrl;
+    }
+
+    // Если URL начинается с /pixflow-media/, оставляем как есть
+    if (mediaUrl.startsWith('/pixflow-media/')) {
+        return mediaUrl.replace('/pixflow-media/', '/media/files/');
+    }
+
+    // Если URL имеет полный путь, извлекаем только имя файла
+    const parts = mediaUrl.split('/');
+    const filename = parts[parts.length - 1];
+
+    // Формируем правильный URL
+    return `/media/files/${filename}`;
 }
 
 // Load trends and suggested users
@@ -892,10 +1175,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         setupTabNavigation();
         setupFeedTypeSwitching();
         setupDeleteModal();
+        setTimeout(initializeMediaPlayers, 500);
 
         await loadPosts();
-        await loadTrends();
-        await loadSuggestedUsers();
     } catch (error) {
         console.error('Initialization error:', error);
     }
