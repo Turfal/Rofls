@@ -3,32 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Roflogram</title>
-    <link th:href="@{/css/login.css}" rel="stylesheet">
+    <title>Login - Pixflow</title>
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="login-container">
-    <h2>Login to Roflogram</h2>
+<div class="auth-container">
+    <h2 class="auth-title">Sign in to Pixflow</h2>
 
-    <div id="message" class="message" style="display: none;"></div>
+    <div id="message" class="mb-md hidden"></div>
 
     <form id="loginForm">
         <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" placeholder="Enter your username" required>
-            <div class="error-message" id="username-error">Username must be at least 3 characters long.</div>
+            <label class="form-label" for="username">Username</label>
+            <input type="text" id="username" class="form-control" placeholder="Enter your username" required>
+            <div class="form-error hidden" id="username-error">Username must be at least 3 characters long.</div>
         </div>
 
         <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter your password" required>
-            <div class="error-message" id="password-error">Password must be at least 6 characters long.</div>
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+            <div class="form-error hidden" id="password-error">Password must be at least 6 characters long.</div>
         </div>
 
-        <button type="submit">Login</button>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
     </form>
 
-    <a href="/registration" class="register-link">Don't have an account? Register here</a>
+    <div class="auth-footer">
+        <p>Don't have an account? <a href="/registration">Register here</a></p>
+    </div>
 </div>
 
 <script th:src="@{/js/login.js}"></script>

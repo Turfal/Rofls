@@ -1,104 +1,105 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roflogram - Пульс сети</title>
-    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <title>Pixflow</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-<div class="neon-container">
-    <!-- Верхняя панель -->
-    <header class="flux-header">
-        <div class="flux-brand">Roflogram</div>
-        <div class="search-core">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Сканировать сеть...">
-            <div id="searchResults" class="search-output"></div>
+<header class="header">
+    <div class="container header-content">
+        <div class="logo">Pixflow</div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link active"><i class="fas fa-home"></i> Feed</a>
+            <a href="/chat" class="nav-link"><i class="fas fa-comment-dots"></i> Messages</a>
+            <a href="/profile" class="nav-link"><i class="fas fa-user"></i> Profile</a>
         </div>
-        <div class="user-core">
-            <div class="user-node" id="username-initial"></div>
+        <div class="user-menu">
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search..." style="width: 200px;">
+                <div id="searchResults" class="search-results hidden"></div>
+            </div>
+            <div class="avatar" id="username-initial"></div>
             <span id="username"></span>
-            <button id="logoutBtn" class="logout-node">Выход</button>
-        </div>
-    </header>
-
-    <!-- Основной интерфейс -->
-    <div class="flux-grid">
-        <!-- Навигация -->
-        <nav class="nav-matrix">
-            <button class="matrix-node active" id="forYouBtn" data-section="feed"><i class="fas fa-fire"></i> Поток</button>
-            <button class="matrix-node" id="followingBtn" data-section="feed"><i class="fas fa-users"></i> Ядра</button>
-            <button class="matrix-node" data-section="explore"><i class="fas fa-compass"></i> Сфера</button>
-            <button class="matrix-node" data-section="notifications"><i class="fas fa-bell"></i> Сигналы</button>
-            <button class="matrix-node" data-section="messages"><i class="fas fa-envelope"></i> Импульсы</button>
-            <a href="#" class="matrix-node" id="profileLink"><i class="fas fa-user"></i> Нода</a>
-            <button id="createPostBtn" class="matrix-node create-node"><i class="fas fa-plus"></i> Эмиссия</button>
-        </nav>
-
-        <!-- Основной контент -->
-        <main class="content-flux">
-            <section id="feedSection" class="flux-section active">
-                <div id="postsContainer" class="posts-flux"></div>
-            </section>
-            <section id="exploreSection" class="flux-section">
-                <h2>Сфера активности</h2>
-                <div class="explore-matrix"></div>
-            </section>
-            <section id="notificationsSection" class="flux-section">
-                <h2>Сигналы сети</h2>
-                <div class="notifications-flux"></div>
-            </section>
-            <section id="messagesSection" class="flux-section">
-                <h2>Импульсы</h2>
-                <div class="messages-flux"></div>
-            </section>
-        </main>
-
-        <!-- Боковая панель -->
-        <aside class="side-flux">
-            <div class="trends-core">
-                <h3>Энергия сети</h3>
-                <div id="trendsContainer" class="trends-flux"></div>
-            </div>
-            <div class="suggestions-core">
-                <h3>Ноды для связи</h3>
-                <div id="suggestedUsers" class="suggestions-flux"></div>
-            </div>
-        </aside>
-    </div>
-
-    <!-- Модальное окно создания поста -->
-    <div id="postModal" class="modal">
-        <div class="modal-core">
-            <div class="modal-head">
-                <h2>Эмиттировать импульс</h2>
-                <button id="cancelPost" class="close-node">×</button>
-            </div>
-            <textarea id="postText" maxlength="250" placeholder="Ваш сигнал..."></textarea>
-            <div class="char-counter"><span id="charCount">0</span>/250</div>
-            <div id="mediaPreview" class="media-flux" style="display: none;">
-                <div id="previewContainer" class="preview-flux"></div>
-                <button id="removeMediaBtn" class="remove-node"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-actions">
-                <button id="attachImageBtn" class="attach-node"><i class="fas fa-paperclip"></i></button>
-                <input type="file" id="postMediaUpload" accept="image/*,video/*" multiple hidden>
-                <button id="submitPost" class="submit-node">Эмиттировать</button>
-            </div>
+            <button id="logoutBtn" class="btn btn-secondary">Log out</button>
         </div>
     </div>
+</header>
 
-    <!-- Модальное окно удаления -->
-    <div id="deleteModal" class="modal">
-        <div class="modal-core delete-core">
-            <h2>Уничтожить импульс?</h2>
-            <p>Это необратимо.</p>
-            <div class="modal-actions">
-                <button id="cancelDelete" class="cancel-node">Отмена</button>
-                <button id="confirmDelete" class="delete-node">Уничтожить</button>
+<div class="main-layout">
+    <aside class="sidebar">
+        <div class="sidebar-section mb-lg">
+            <button id="createPostBtn" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-plus"></i> Create Post
+            </button>
+        </div>
+        <div class="sidebar-section mb-lg">
+            <h4 class="mb-sm">Feed</h4>
+            <div class="feed-tabs">
+                <button id="forYouBtn" class="btn btn-tertiary active" data-section="feed">
+                    <i class="fas fa-fire"></i> For You
+                </button>
+                <button id="followingBtn" class="btn btn-tertiary" data-section="feed">
+                    <i class="fas fa-users"></i> Following
+                </button>
             </div>
+        </div>
+        <div class="sidebar-section mb-lg">
+            <h4 class="mb-sm">Trends</h4>
+            <div id="trendsContainer" class="trends-list"></div>
+        </div>
+        <div class="sidebar-section">
+            <h4 class="mb-sm">Suggested Users</h4>
+            <div id="suggestedUsers" class="suggested-users"></div>
+        </div>
+    </aside>
+
+    <main class="content">
+        <section id="feedSection" class="feed-section">
+            <div id="postsContainer" class="posts-list"></div>
+        </section>
+    </main>
+</div>
+
+<!-- Post Modal -->
+<div id="postModal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h4 class="modal-title">Create Post</h4>
+            <span id="cancelPost" class="modal-close">&times;</span>
+        </div>
+        <textarea id="postText" class="form-control mb-sm" maxlength="250" placeholder="What's on your mind?"></textarea>
+        <div class="char-counter mb-md"><span id="charCount">0</span>/250</div>
+
+        <div id="mediaPreview" class="media-preview" style="display: none;">
+            <div id="previewContainer" class="preview-content"></div>
+            <button id="removeMediaBtn" class="remove-media-btn"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="modal-footer">
+            <button id="attachImageBtn" class="btn btn-tertiary">
+                <i class="fas fa-paperclip"></i> Attach
+            </button>
+            <input type="file" id="postMediaUpload" accept="image/*,video/*" hidden>
+            <button id="submitPost" class="btn btn-primary">Post</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h4 class="modal-title">Delete Post?</h4>
+            <span class="modal-close" id="closeDeleteModal">&times;</span>
+        </div>
+        <p>This action cannot be undone.</p>
+        <div class="modal-footer">
+            <button id="cancelDelete" class="btn btn-tertiary">Cancel</button>
+            <button id="confirmDelete" class="btn btn-primary">Delete</button>
         </div>
     </div>
 </div>

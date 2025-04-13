@@ -1,144 +1,141 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roflogram - Импульсы</title>
-  <link rel="stylesheet" th:href="@{/css/chat.css}">
+  <title>Messages - Pixflow</title>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+<header class="header">
+  <div class="container header-content">
+    <div class="logo">Pixflow</div>
+    <div class="nav-menu">
+      <a href="/" class="nav-link"><i class="fas fa-home"></i> Feed</a>
+      <a href="/chat" class="nav-link active"><i class="fas fa-comment-dots"></i> Messages</a>
+      <a href="/profile" class="nav-link"><i class="fas fa-user"></i> Profile</a>
+    </div>
+    <div class="user-menu">
+      <button id="logoutBtn" class="btn btn-secondary">Log out</button>
+    </div>
+  </div>
+</header>
+
 <div class="chat-container">
-  <!-- Верхняя панель -->
-  <header class="flux-header">
-    <div class="flux-brand">Roflogram</div>
-    <div class="nav-links">
-      <a href="/" class="matrix-node"><i class="fas fa-home"></i> Поток</a>
-      <a href="/profile" class="matrix-node"><i class="fas fa-user"></i> Нода</a>
-      <button id="logoutBtn" class="logout-node"><i class="fas fa-sign-out-alt"></i> Выход</button>
+  <!-- Conversations sidebar -->
+  <aside class="conversations-sidebar">
+    <div class="search-wrapper mb-md">
+      <input type="text" id="searchConversations" class="form-control" placeholder="Search conversations...">
     </div>
-  </header>
+    <button id="newChatBtn" class="btn btn-primary mb-md" style="width: 100%;">
+      <i class="fas fa-plus"></i> New Conversation
+    </button>
+    <div class="conversations-list" id="conversationsList">
+      <!-- Conversations will be loaded here -->
+      <div class="loading-indicator">Loading conversations...</div>
+    </div>
+  </aside>
 
-  <!-- Основной контейнер чата -->
-  <div class="chat-wrapper">
-    <!-- Боковая панель с беседами -->
-    <aside class="conversations-panel">
-      <div class="search-wrapper">
-        <i class="fas fa-search"></i>
-        <input type="text" id="searchConversations" placeholder="Поиск импульсов...">
+  <!-- Chat main area -->
+  <div class="chat-main">
+    <!-- Chat header -->
+    <div class="chat-header" id="chatHeader">
+      <div class="default-header" id="defaultHeader">
+        <h3>Select a conversation or create a new one</h3>
       </div>
-      <button id="newChatBtn" class="new-chat-btn">
-        <i class="fas fa-plus"></i> Новый импульс
+      <div class="active-chat-header" id="activeChatHeader" style="display: none;">
+        <div class="chat-info">
+          <h3 id="chatTitle">Conversation Title</h3>
+          <div class="chat-participants" id="chatParticipants">Participants: </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages container -->
+    <div class="messages-container" id="messagesContainer">
+      <!-- Media preview area -->
+      <div id="mediaPreview" class="media-preview" style="display: none;">
+        <div class="preview-content"></div>
+        <button class="remove-media-btn"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-content text-center">
+          <i class="fas fa-comment-dots" style="font-size: 48px; margin-bottom: 16px;"></i>
+          <h3 class="mb-sm">Welcome to Conversations</h3>
+          <p>Select an existing conversation or create a new one to start messaging</p>
+        </div>
+      </div>
+      <div id="messagesList" class="messages-list" style="display: none;">
+        <!-- Messages will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Message input -->
+    <div class="message-input" id="messageInputContainer" style="display: none;">
+      <textarea id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+      <!-- Attachment button -->
+      <button id="attachMediaBtn" class="btn-icon">
+        <i class="fas fa-paperclip"></i>
       </button>
-      <div class="conversations-list" id="conversationsList">
-        <!-- Список бесед будет загружен сюда -->
-        <div class="loading-indicator">Загрузка импульсов...</div>
-      </div>
-    </aside>
+      <input type="file" id="mediaInput" accept="image/*,video/*" style="display: none;">
 
-    <!-- Правая панель чата -->
-    <main class="chat-panel">
-      <!-- Заголовок чата с информацией о собеседнике -->
-      <div class="chat-header" id="chatHeader">
-        <div class="default-header" id="defaultHeader">
-          <h2>Выберите беседу или создайте новую</h2>
-        </div>
-        <div class="active-chat-header" id="activeChatHeader" style="display: none;">
-          <div class="chat-info">
-            <h2 id="chatTitle">Название беседы</h2>
-            <div class="participants" id="chatParticipants">Участники: </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Область сообщений -->
-      <div class="messages-container" id="messagesContainer">
-        <!-- Область предпросмотра медиа (добавлено) -->
-        <div id="mediaPreview" class="media-preview" style="display: none;">
-          <div class="preview-content"></div>
-          <button class="remove-media-btn"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="welcome-screen" id="welcomeScreen">
-          <div class="welcome-content">
-            <i class="fas fa-comment-dots welcome-icon"></i>
-            <h3>Добро пожаловать в импульс-обмен</h3>
-            <p>Выберите существующую беседу или создайте новую для обмена импульсами</p>
-          </div>
-        </div>
-        <div id="messagesList" class="messages-list" style="display: none;">
-          <!-- Сообщения будут загружены сюда -->
-        </div>
-      </div>
-
-      <!-- Поле ввода сообщения -->
-      <div class="message-input-container" id="messageInputContainer" style="display: none;">
-        <textarea id="messageInput" placeholder="Введите сообщение..." rows="1"></textarea>
-        <!-- Кнопка прикрепления файлов (добавлено) -->
-        <button id="attachMediaBtn" class="attach-media-btn">
-          <i class="fas fa-paperclip"></i>
-        </button>
-        <input type="file" id="mediaInput" accept="image/*,video/*" style="display: none;">
-
-        <button id="sendMessageBtn" class="send-btn">
-          <i class="fas fa-paper-plane"></i>
-        </button>
-      </div>
-    </main>
-  </div>
-
-  <!-- Модальное окно создания новой беседы -->
-  <div id="newChatModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Новая беседа</h3>
-        <span class="close-modal">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="chatTitleInput">Название беседы</label>
-          <input type="text" id="chatTitleInput" placeholder="Введите название беседы">
-        </div>
-        <div class="form-group">
-          <label for="participantsInput">Участники (введите имена через запятую)</label>
-          <input type="text" id="participantsInput" placeholder="username1, username2, ...">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="cancelNewChat" class="cancel-btn">Отмена</button>
-        <button id="createNewChat" class="create-btn">Создать</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Модальное окно для репоста (добавлено) -->
-  <div id="repostModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Опции репоста</h3>
-        <span id="closeRepostModal" class="close-modal">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="repost-options">
-          <button id="repostToFeed" class="repost-option">
-            <i class="fas fa-stream"></i> Репост в ленту
-          </button>
-          <button id="repostToChat" class="repost-option">
-            <i class="fas fa-comments"></i> Поделиться в беседе
-          </button>
-        </div>
-        <div id="chatSelectContainer" style="display: none; margin-top: 15px;">
-          <select id="conversationSelect" class="conversation-select">
-            <option value="">Выберите беседу...</option>
-          </select>
-          <button id="confirmRepostToChat" class="submit-node" style="margin-top: 10px;">Поделиться</button>
-        </div>
-      </div>
+      <button id="sendMessageBtn" class="btn-icon">
+        <i class="fas fa-paper-plane"></i>
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Подключение скриптов -->
+<!-- New Conversation Modal -->
+<div id="newChatModal" class="modal-overlay" style="display: none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h4 class="modal-title">New Conversation</h4>
+      <span class="modal-close close-modal">&times;</span>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="chatTitleInput">Conversation Title</label>
+      <input type="text" id="chatTitleInput" class="form-control" placeholder="Enter conversation title">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="participantsInput">Participants (comma-separated)</label>
+      <input type="text" id="participantsInput" class="form-control" placeholder="username1, username2, ...">
+    </div>
+    <div class="modal-footer">
+      <button id="cancelNewChat" class="btn btn-tertiary">Cancel</button>
+      <button id="createNewChat" class="btn btn-primary">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Repost Modal -->
+<div id="repostModal" class="modal-overlay" style="display: none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h4 class="modal-title">Repost Options</h4>
+      <span id="closeRepostModal" class="modal-close">&times;</span>
+    </div>
+    <div class="repost-options">
+      <button id="repostToFeed" class="btn btn-secondary mb-sm" style="width: 100%;">
+        <i class="fas fa-stream"></i> Repost to feed
+      </button>
+      <button id="repostToChat" class="btn btn-secondary" style="width: 100%;">
+        <i class="fas fa-comments"></i> Share in conversation
+      </button>
+    </div>
+    <div id="chatSelectContainer" style="display: none; margin-top: 16px;">
+      <select id="conversationSelect" class="form-control mb-sm">
+        <option value="">Select a conversation...</option>
+      </select>
+      <button id="confirmRepostToChat" class="btn btn-primary">Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script th:src="@{/js/chat.js}"></script>

@@ -1,38 +1,29 @@
 package pixflow.alpha.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import pixflow.alpha.config.MyUserDetails;
 import pixflow.alpha.model.User;
 import pixflow.alpha.repository.UserRepository;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
+@Data
 @Service
-@RequiredArgsConstructor
 public class MyUserDetailsService implements UserDetailsService {
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        Optional<User> user = userRepository.findByUsername(username);
 
-        // Transform roles to authorities
-        Set<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                .collect(Collectors.toSet());
-
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                user.isEnabled(),
-                true, true, true,
-                authorities
-        );
+        return user.map(MyUserDetails::new)
+                .orElseThrow(()->new UsernameNotFoundException(username+"There is not such user in Repository"));
     }
 }

@@ -1,137 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>403 - Forbidden | Roflogram</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #ff007f, #000);
-      background-size: 400% 400%;
-      color: white;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      animation: gradientAnimation 10s ease infinite;
-      text-align: center;
-    }
-
-    @keyframes gradientAnimation {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    .error-container {
-      max-width: 500px;
-      width: 90%;
-      padding: 30px;
-      background: rgba(0, 0, 0, 0.9);
-      border-radius: 15px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-      animation: fadeIn 0.5s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .error-code {
-      font-size: 80px;
-      font-weight: bold;
-      color: #ff007f;
-      margin-bottom: 20px;
-      animation: shake 0.5s ease infinite;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
-    }
-
-    h1 {
-      font-size: 28px;
-      margin-bottom: 10px;
-    }
-
-    p {
-      font-size: 16px;
-      color: #ccc;
-      margin-bottom: 20px;
-    }
-
-    .error-emoji {
-      font-size: 50px;
-      margin-bottom: 20px;
-      animation: pulse 1.5s ease infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-    }
-
-    .home-link {
-      display: inline-block;
-      background: #ff007f;
-      padding: 12px 25px;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      text-decoration: none;
-      border-radius: 8px;
-      transition: background 0.3s ease, transform 0.1s ease;
-    }
-
-    .home-link:hover {
-      background: #ff3399;
-    }
-
-    .home-link:active {
-      transform: scale(0.98);
-    }
-
-    @media (max-width: 400px) {
-      .error-container {
-        padding: 20px;
-      }
-
-      .error-code {
-        font-size: 60px;
-      }
-
-      h1 {
-        font-size: 24px;
-      }
-
-      p {
-        font-size: 14px;
-      }
-
-      .home-link {
-        padding: 10px 20px;
-        font-size: 14px;
-      }
-    }
-  </style>
+  <title>403 - Forbidden | Pixflow</title>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="error-container">
   <div class="error-code">403</div>
-  <div class="error-emoji">🚫</div>
-  <h1>Access Denied!</h1>
-  <p>Sorry, but this area is off-limits. It’s like trying to sneak into a VIP party without an invite! 🎉</p>
-  <a href="/home" class="home-link">Back to Home</a>
+  <div class="error-message">Access Denied</div>
+  <p class="mb-lg">Sorry, but you don't have permission to access this page.</p>
+  <a href="/" class="btn btn-primary">Back to Home</a>
 </div>
 </body>
 </html>
