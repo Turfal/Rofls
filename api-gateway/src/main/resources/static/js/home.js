@@ -804,13 +804,13 @@ function showRepostModal(postId) {
     if (!repostModal) {
         repostModal = document.createElement('div');
         repostModal.id = 'repostModal';
-        repostModal.className = 'modal';
+        repostModal.className = 'modal-overlay'; // Используем класс modal-overlay для фона
 
         repostModal.innerHTML = `
-            <div class="modal-core">
-                <div class="modal-head">
-                    <h2>Repost Options</h2>
-                    <button id="closeRepostModal" class="close-node">×</button>
+            <div class="modal">
+                <div class="modal-header">
+                    <h4 class="modal-title">Share Post</h4>
+                    <button id="closeRepostModal" class="modal-close">×</button>
                 </div>
                 <div class="repost-options">
                     <button id="repostToFeed" class="repost-option">
@@ -824,7 +824,7 @@ function showRepostModal(postId) {
                     <select id="conversationSelect" class="conversation-select">
                         <option value="">Select a conversation...</option>
                     </select>
-                    <button id="confirmRepostToChat" class="submit-node" style="margin-top: 10px;">Share</button>
+                    <button id="confirmRepostToChat" class="btn btn-primary" style="margin-top: 10px;">Share</button>
                 </div>
             </div>
         `;
@@ -848,6 +848,13 @@ function showRepostModal(postId) {
                 repostToChat(postIdToRepost, conversationId);
             } else {
                 alert('Please select a conversation');
+            }
+        });
+
+        // Закрытие при клике вне модального окна
+        repostModal.addEventListener('click', (event) => {
+            if (event.target === repostModal) {
+                repostModal.style.display = 'none';
             }
         });
     }

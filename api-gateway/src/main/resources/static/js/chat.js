@@ -601,7 +601,7 @@ async function uploadAndSendMediaMessage(content) {
             mediaType: selectedMedia.type.startsWith('image/') ? 'image' : 'video'
         };
 
-        // Reset selected media
+        // Reset selected media and close preview
         resetMediaSelection();
 
         // Send the message
@@ -663,6 +663,7 @@ async function sendMessageREST(messageData) {
 }
 
 // Handle media file selection
+// Handle media file selection
 function handleMediaSelection(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -670,16 +671,34 @@ function handleMediaSelection(event) {
     selectedMedia = file;
     mediaType = file.type.startsWith('image/') ? 'image' : 'video';
 
-    // Display preview
-    const previewContent = document.querySelector('.preview-content');
+    // Create or update media preview popup
+    let mediaPreviewPopup = document.getElementById('mediaPreviewPopup');
+    if (!mediaPreviewPopup) {
+        mediaPreviewPopup = document.createElement('div');
+        mediaPreviewPopup.id = 'mediaPreviewPopup';
+        mediaPreviewPopup.className = 'media-preview-popup';
+        mediaPreviewPopup.innerHTML = `
+            <div class="preview-content"></div>
+            <button class="remove-media-btn"><i class="fas fa-times"></i></button>
+        `;
+        document.body.appendChild(mediaPreviewPopup);
+
+        // Add event listener for remove button
+        const removeMediaBtn = mediaPreviewPopup.querySelector('.remove-media-btn');
+        if (removeMediaBtn) {
+            removeMediaBtn.addEventListener('click', resetMediaSelection);
+        }
+    }
+
+    // Display preview content
+    const previewContent = mediaPreviewPopup.querySelector('.preview-content');
     if (previewContent) {
         if (mediaType === 'image') {
             previewContent.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Image preview">`;
         } else {
             previewContent.innerHTML = `<video controls><source src="${URL.createObjectURL(file)}" type="${file.type}"></video>`;
         }
-
-        document.getElementById('mediaPreview').style.display = 'block';
+        mediaPreviewPopup.style.display = 'block';
     }
 }
 
@@ -694,14 +713,10 @@ function resetMediaSelection() {
         mediaInput.value = '';
     }
 
-    // Hide media preview
-    const mediaPreview = document.getElementById('mediaPreview');
-    if (mediaPreview) {
-        mediaPreview.style.display = 'none';
-        const previewContent = mediaPreview.querySelector('.preview-content');
-        if (previewContent) {
-            previewContent.innerHTML = '';
-        }
+    // Remove media preview popup
+    const mediaPreviewPopup = document.getElementById('mediaPreviewPopup');
+    if (mediaPreviewPopup) {
+        mediaPreviewPopup.remove();
     }
 }
 

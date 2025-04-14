@@ -85,7 +85,10 @@ async function getCurrentUser() {
         const userData = await response.json();
         console.log('Current user data:', userData);
         currentUsername = userData.username;
-        document.getElementById('username').textContent = userData.username;
+        const usernameElement = document.getElementById('username');
+        if (usernameElement) {
+            usernameElement.textContent = userData.username;
+        }
         return userData;
     } catch (error) {
         console.error('Error fetching current user:', error);
@@ -106,28 +109,79 @@ async function loadProfile(identifier) {
         profileData = await response.json();
         console.log('Profile data:', profileData);
         displayProfile(profileData);
+        updateProfileStats();
     } catch (error) {
         console.error('Error loading profile:', error);
-        document.querySelector('.profile-container').innerHTML = '<p class="error-message">Error loading profile</p>';
+        const profileContainer = document.querySelector('.profile-container');
+        if (profileContainer) {
+            profileContainer.innerHTML = '<p class="error-message">Error loading profile</p>';
+        }
     }
 }
 
 // Display profile data
 function displayProfile(profile) {
-    document.getElementById('profileUsername').textContent = profile.username || 'Unknown User';
-    document.getElementById('profileBio').textContent = profile.bio || 'No bio available';
+    const profileUsername = document.getElementById('profileUsername');
+    if (profileUsername) {
+        profileUsername.textContent = profile.username || 'Unknown User';
+    } else {
+        console.error('profileUsername element not found');
+    }
+
+    const profileBio = document.getElementById('profileBio');
+    if (profileBio) {
+        profileBio.textContent = profile.bio || 'No bio available';
+    } else {
+        console.error('profileBio element not found');
+    }
 
     // Статистика
-    document.getElementById('postsCount').textContent = profile.postsCount !== undefined ? profile.postsCount : 0;
-    document.getElementById('commentsCount').textContent = profile.commentsCount !== undefined ? profile.commentsCount : 0;
-    document.getElementById('ratingValue').textContent = profile.rating !== undefined ? profile.rating : 0;
+    const postsCount = document.getElementById('postsCount');
+    if (postsCount) {
+        postsCount.textContent = profile.postsCount !== undefined ? profile.postsCount : 0;
+    }
+    const commentsCount = document.getElementById('commentsCount');
+    if (commentsCount) {
+        commentsCount.textContent = profile.commentsCount !== undefined ? profile.commentsCount : 0;
+    }
+    const ratingValue = document.getElementById('ratingValue');
+    if (ratingValue) {
+        ratingValue.textContent = profile.rating !== undefined ? profile.rating : 0;
+    }
+    const followersCount = document.getElementById('followersCount');
+    if (followersCount) {
+        followersCount.textContent = profile.followersCount !== undefined ? profile.followersCount : 0;
+    }
+    const followingCount = document.getElementById('followingCount');
+    if (followingCount) {
+        followingCount.textContent = profile.followingCount !== undefined ? profile.followingCount : 0;
+    }
+    const friendsCount = document.getElementById('friendsCount');
+    if (friendsCount) {
+        friendsCount.textContent = profile.friendsCount !== undefined ? profile.friendsCount : 0;
+    }
 
     // Дополнительная информация
-    document.getElementById('joinDate').textContent = formatDate(profile.joinDate) || 'Unknown';
-    document.getElementById('lastActive').textContent = formatDateTime(profile.lastActive) || 'Unknown';
-    document.getElementById('totalUpvotes').textContent = profile.totalUpvotes !== undefined ? profile.totalUpvotes : 0;
-    document.getElementById('totalDownvotes').textContent = profile.totalDownvotes !== undefined ? profile.totalDownvotes : 0;
-    document.getElementById('achievementsCount').textContent = profile.achievementsCount !== undefined ? profile.achievementsCount : 0;
+    const joinDate = document.getElementById('joinDate');
+    if (joinDate) {
+        joinDate.textContent = formatDate(profile.joinDate) || 'Unknown';
+    }
+    const lastActive = document.getElementById('lastActive');
+    if (lastActive) {
+        lastActive.textContent = formatDateTime(profile.lastActive) || 'Unknown';
+    }
+    const totalUpvotes = document.getElementById('totalUpvotes');
+    if (totalUpvotes) {
+        totalUpvotes.textContent = profile.totalUpvotes !== undefined ? profile.totalUpvotes : 0;
+    }
+    const totalDownvotes = document.getElementById('totalDownvotes');
+    if (totalDownvotes) {
+        totalDownvotes.textContent = profile.totalDownvotes !== undefined ? profile.totalDownvotes : 0;
+    }
+    const achievementsCount = document.getElementById('achievementsCount');
+    if (achievementsCount) {
+        achievementsCount.textContent = profile.achievementsCount !== undefined ? profile.achievementsCount : 0;
+    }
 
     // Аватар пользователя
     const avatarElement = document.getElementById('profileAvatar');
@@ -137,30 +191,28 @@ function displayProfile(profile) {
         } else {
             avatarElement.src = '/media/files/raw.png';
         }
-        // Устанавливаем обработчик ошибки загрузки изображения
         avatarElement.onerror = function() {
             this.src = '/media/files/raw.png';
         };
     }
 
-    // Кнопка редактирования профиля (только если это профиль текущего пользователя)
+    // Кнопка редактирования профиля или действия (Follow/Friend)
     if (isOwnProfile) {
         const editBtnContainer = document.getElementById('editProfileBtnContainer');
         if (editBtnContainer) {
             editBtnContainer.innerHTML = '<button id="editProfileBtn" class="btn btn-primary"><i class="fas fa-cog"></i> Edit Profile</button>';
-            document.getElementById('editProfileBtn').addEventListener('click', openEditProfileModal);
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', openEditProfileModal);
+            }
         }
     } else {
-        // Если это не профиль текущего пользователя, добавляем кнопки Follow и Friend Request
         const editBtnContainer = document.getElementById('editProfileBtnContainer');
         if (editBtnContainer) {
-            // Проверяем статус подписки
             checkFollowStatus(profile.username).then(isFollowing => {
                 const followBtnClass = isFollowing ? 'btn-secondary' : 'btn-primary';
                 const followBtnText = isFollowing ? 'Unfollow' : 'Follow';
-                const followBtnAction = isFollowing ?
-                    `unfollowUser('${profile.username}')` :
-                    `followUser('${profile.username}')`;
+                const followBtnAction = isFollowing ? `unfollowUser('${profile.username}')` : `followUser('${profile.username}')`;
 
                 editBtnContainer.innerHTML = `
                     <div class="profile-actions">
@@ -173,7 +225,6 @@ function displayProfile(profile) {
                     </div>
                 `;
 
-                // Проверяем статус дружбы
                 checkFriendStatus(profile.username).then(isFriend => {
                     const friendBtn = document.getElementById('friendBtn');
                     if (friendBtn && isFriend) {
@@ -193,47 +244,48 @@ function displayProfile(profile) {
     }
 }
 
+// Update profile statistics
 async function updateProfileStats() {
     try {
         const identifier = getUserIdFromPath() || { type: 'userId', value: currentUserId };
         const response = await fetchWithAuth(`/profiles/stats/${identifier.value}`);
         const stats = await response.json();
 
-        // Обновляем счетчики
-        if (stats.postsCount !== undefined) {
-            document.getElementById('postsCount').textContent = stats.postsCount;
+        const postsCount = document.getElementById('postsCount');
+        if (postsCount) {
+            postsCount.textContent = stats.postsCount !== undefined ? stats.postsCount : 0;
         }
-        if (stats.commentsCount !== undefined) {
-            document.getElementById('commentsCount').textContent = stats.commentsCount;
+        const commentsCount = document.getElementById('commentsCount');
+        if (commentsCount) {
+            commentsCount.textContent = stats.commentsCount !== undefined ? stats.commentsCount : 0;
         }
-        if (stats.rating !== undefined) {
-            document.getElementById('ratingValue').textContent = stats.rating;
+        const ratingValue = document.getElementById('ratingValue');
+        if (ratingValue) {
+            ratingValue.textContent = stats.rating !== undefined ? stats.rating : 0;
         }
-
-        // Обновляем дополнительную статистику
-        if (stats.totalUpvotes !== undefined) {
-            document.getElementById('totalUpvotes').textContent = stats.totalUpvotes;
+        const followersCount = document.getElementById('followersCount');
+        if (followersCount) {
+            followersCount.textContent = stats.followersCount !== undefined ? stats.followersCount : 0;
         }
-        if (stats.totalDownvotes !== undefined) {
-            document.getElementById('totalDownvotes').textContent = stats.totalDownvotes;
+        const followingCount = document.getElementById('followingCount');
+        if (followingCount) {
+            followingCount.textContent = stats.followingCount !== undefined ? stats.followingCount : 0;
+        }
+        const friendsCount = document.getElementById('friendsCount');
+        if (friendsCount) {
+            friendsCount.textContent = stats.friendsCount !== undefined ? stats.friendsCount : 0;
+        }
+        const totalUpvotes = document.getElementById('totalUpvotes');
+        if (totalUpvotes) {
+            totalUpvotes.textContent = stats.totalUpvotes !== undefined ? stats.totalUpvotes : 0;
+        }
+        const totalDownvotes = document.getElementById('totalDownvotes');
+        if (totalDownvotes) {
+            totalDownvotes.textContent = stats.totalDownvotes !== undefined ? stats.totalDownvotes : 0;
         }
     } catch (error) {
         console.error('Error updating profile stats:', error);
     }
-}
-
-function setupStatisticsUpdate() {
-    // После создания поста
-    document.getElementById('submitPost')?.addEventListener('click', async () => {
-        // Небольшая задержка для того, чтобы сервер успел обработать новый пост
-        setTimeout(updateProfileStats, 1000);
-    });
-
-    // После удаления поста
-    document.getElementById('confirmDelete')?.addEventListener('click', async () => {
-        // Небольшая задержка для того, чтобы сервер успел обработать удаление
-        setTimeout(updateProfileStats, 1000);
-    });
 }
 
 // Load user's posts
@@ -271,34 +323,53 @@ async function loadRecentPosts() {
 
         const postsWithCommentCounts = await Promise.all(commentCountPromises);
 
-        postsWithCommentCounts.forEach(post => {
-            const postElement = createRecentPostElement(post);
-            postsContainer.appendChild(postElement);
-        });
+        postsContainer.innerHTML = ''; // Очищаем контейнер перед добавлением постов
+
+        if (postsWithCommentCounts.length === 0) {
+            postsContainer.innerHTML = '<div class="no-posts">No posts yet.</div>';
+        } else {
+            postsWithCommentCounts.forEach(post => {
+                const postElement = createRecentPostElement(post);
+                postsContainer.appendChild(postElement);
+            });
+        }
 
         addPostEventListeners();
 
         const createPostBtnContainer = document.getElementById('createPostBtnContainer');
         if (createPostBtnContainer) {
             if (isOwnProfile) {
-                createPostBtnContainer.innerHTML = '<button id="createPostBtn" class="create-node"><i class="fas fa-plus"></i> Эмиссия</button>';
-                document.getElementById('createPostBtn').addEventListener('click', () => {
-                    document.getElementById('postModal').style.display = 'flex';
-                    document.getElementById('postText').focus();
-                });
+                createPostBtnContainer.innerHTML = `
+                    <button id="createPostBtn" class="btn btn-primary create-post-btn">
+                        <i class="fas fa-pen"></i> <span data-lang="create_post">Create Post</span>
+                    </button>
+                `;
+                const createPostBtn = document.getElementById('createPostBtn');
+                if (createPostBtn) {
+                    createPostBtn.addEventListener('click', () => {
+                        const postModal = document.getElementById('postModal');
+                        if (postModal) {
+                            postModal.style.display = 'flex';
+                            const postText = document.getElementById('postText');
+                            if (postText) {
+                                postText.focus();
+                            }
+                        }
+                    });
+                }
             } else {
                 createPostBtnContainer.innerHTML = '';
             }
         }
     } catch (error) {
         console.error('Error loading posts:', error);
-        postsContainer.innerHTML = '<div class="error">Ошибка сканирования импульсов</div>';
+        postsContainer.innerHTML = '<div class="error">Error loading posts</div>';
     } finally {
         isLoadingPosts = false;
     }
 }
 
-// Create recent post element with clickable username
+// Create recent post element
 function createRecentPostElement(post) {
     const postDiv = document.createElement('div');
     postDiv.className = 'post-item';
@@ -337,14 +408,14 @@ function createRecentPostElement(post) {
                     <span class="like-count">${post.likes || 0}</span>
                 </button>
                 <button class="comment-btn" data-id="${post.id}">
-                    <span class="comment-icon">💬</span> Comments <span class="comment-count">(${post.commentCount || 0})</span>
+                    <span class="comment-icon">💬</span> <span data-lang="comments">Comments</span> <span class="comment-count">(${post.commentCount || 0})</span>
                 </button>
                 <button class="repost-btn" data-id="${post.id}">
-                    <span class="repost-icon">🔄</span> Repost
+                    <span class="repost-icon">🔄</span> <span data-lang="repost">Repost</span>
                 </button>
                 ${post.username === currentUsername
         ? `<button class="delete-post-btn" data-id="${post.id}">
-                        <span class="delete-icon">🗑️</span> Delete
+                        <span class="delete-icon">🗑️</span> <span data-lang="delete">Delete</span>
                     </button>`
         : ''}
             </div>
@@ -353,7 +424,7 @@ function createRecentPostElement(post) {
             <div class="comments-list" id="comments-list-${post.id}"></div>
             <div class="add-comment">
                 <textarea class="comment-textarea" id="comment-textarea-${post.id}" placeholder="Write a comment..."></textarea>
-                <button class="submit-comment-btn" data-id="${post.id}">Comment</button>
+                <button class="submit-comment-btn" data-id="${post.id}" data-lang="comment">Comment</button>
             </div>
         </div>
     `;
@@ -372,22 +443,13 @@ function setupPostModal() {
     const previewContainer = document.getElementById('previewContainer');
     const removeMediaBtn = document.getElementById('removeMediaBtn');
     const submitPostBtn = document.getElementById('submitPost');
-    let selectedMedia = null;
-    let mediaType = null;
 
-    if (!postModal) console.error('postModal not found');
-    if (!cancelPostBtn) console.error('cancelPostBtn not found');
-    if (!postTextArea) console.error('postTextArea not found');
-    if (!charCount) console.error('charCount not found');
-    if (!postMediaUpload) console.error('postMediaUpload not found');
-    if (!attachMediaBtn) console.error('attachMediaBtn not found');
-    if (!mediaPreview) console.error('mediaPreview not found');
-    if (!previewContainer) console.error('previewContainer not found');
-    if (!removeMediaBtn) console.error('removeMediaBtn not found');
-    if (!submitPostBtn) console.error('submitPostBtn not found');
+    if (!postModal || !cancelPostBtn || !postTextArea || !charCount || !postMediaUpload || !attachMediaBtn || !mediaPreview || !previewContainer || !removeMediaBtn || !submitPostBtn) {
+        console.error('Post modal elements missing');
+        return;
+    }
 
     cancelPostBtn.addEventListener('click', () => {
-        console.log('Cancel Post button clicked');
         postModal.style.display = 'none';
         resetPostForm();
     });
@@ -399,21 +461,13 @@ function setupPostModal() {
     });
 
     attachMediaBtn.addEventListener('click', () => {
-        console.log('Attach Media button clicked');
-        if (!postMediaUpload) {
-            console.error('postMediaUpload element not found');
-            return;
-        }
         postMediaUpload.click();
     });
 
     postMediaUpload.addEventListener('change', () => {
-        console.log('File input changed');
         const file = postMediaUpload.files[0];
         if (file) {
-            console.log('Selected file:', file);
             selectedMedia = file;
-
             if (file.type.startsWith('image/')) {
                 mediaType = 'image';
                 previewContainer.innerHTML = `<img id="previewImg" src="${URL.createObjectURL(file)}" alt="Preview">`;
@@ -427,40 +481,19 @@ function setupPostModal() {
             } else {
                 console.warn('Unsupported file type:', file.type);
             }
-
-            if (!previewContainer) {
-                console.error('previewContainer element not found');
-                return;
-            }
-            if (!mediaPreview) {
-                console.error('mediaPreview element not found');
-                return;
-            }
             mediaPreview.style.display = 'block';
-        } else {
-            console.log('No file selected');
         }
     });
 
     removeMediaBtn.addEventListener('click', () => {
-        console.log('Remove Media button clicked');
         selectedMedia = null;
         mediaType = null;
         postMediaUpload.value = '';
-        if (!mediaPreview) {
-            console.error('mediaPreview element not found');
-            return;
-        }
-        if (!previewContainer) {
-            console.error('previewContainer element not found');
-            return;
-        }
         mediaPreview.style.display = 'none';
         previewContainer.innerHTML = '';
     });
 
     submitPostBtn.addEventListener('click', async () => {
-        console.log('Submit Post button clicked');
         const postText = postTextArea.value.trim();
         if (!postText && !selectedMedia) {
             alert('Please enter text or attach media');
@@ -469,7 +502,6 @@ function setupPostModal() {
         try {
             let mediaUrl = null;
             if (selectedMedia) {
-                console.log('Uploading media:', selectedMedia);
                 const formData = new FormData();
                 formData.append('file', selectedMedia);
                 const response = await fetch('/media/upload', {
@@ -480,11 +512,9 @@ function setupPostModal() {
                     body: formData
                 });
                 if (!response.ok) {
-                    console.error('Media upload failed:', response.status, response.statusText);
                     throw new Error('Failed to upload media');
                 }
                 const mediaData = await response.json();
-                console.log('Media upload response:', mediaData);
                 mediaUrl = mediaData.imageUrl;
             }
 
@@ -493,7 +523,6 @@ function setupPostModal() {
                 mediaUrl: mediaUrl,
                 mediaType: mediaType
             };
-            console.log('Post data to be sent:', postData);
 
             const postResponse = await fetch('/posts/create', {
                 method: 'POST',
@@ -504,14 +533,12 @@ function setupPostModal() {
                 body: JSON.stringify(postData)
             });
             if (!postResponse.ok) {
-                console.error('Post creation failed:', postResponse.status, postResponse.statusText);
                 throw new Error('Failed to create post');
             }
-            console.log('Post created successfully');
             postModal.style.display = 'none';
             resetPostForm();
             await loadRecentPosts();
-            await loadProfile({ type: 'userId', value: currentUserId });
+            await updateProfileStats();
         } catch (error) {
             console.error('Error creating post:', error);
             alert('Failed to create post. Please try again.');
@@ -526,14 +553,16 @@ function resetPostForm() {
     const mediaPreview = document.getElementById('mediaPreview');
     const previewContainer = document.getElementById('previewContainer');
 
-    postTextArea.value = '';
-    charCount.textContent = '0';
-    charCount.style.color = '#888';
+    if (postTextArea) postTextArea.value = '';
+    if (charCount) {
+        charCount.textContent = '0';
+        charCount.style.color = '#888';
+    }
     selectedMedia = null;
     mediaType = null;
-    postMediaUpload.value = '';
-    mediaPreview.style.display = 'none';
-    previewContainer.innerHTML = '';
+    if (postMediaUpload) postMediaUpload.value = '';
+    if (mediaPreview) mediaPreview.style.display = 'none';
+    if (previewContainer) previewContainer.innerHTML = '';
 }
 
 function getFormattedMediaUrl(mediaUrl) {
@@ -550,6 +579,8 @@ async function loadComments(postId) {
         const response = await fetchWithAuth(`/comments/post/${postId}`);
         const comments = await response.json();
         const commentsList = document.getElementById(`comments-list-${postId}`);
+        if (!commentsList) return;
+
         commentsList.innerHTML = '';
 
         if (comments.length === 0) {
@@ -560,13 +591,11 @@ async function loadComments(postId) {
         const initialComments = comments.slice(0, 5);
         const remainingComments = comments.slice(5);
 
-        // Создаем элементы для первых 5 комментариев
         initialComments.forEach(comment => {
             const commentElement = createCommentElement(comment, postId);
             commentsList.appendChild(commentElement);
         });
 
-        // Добавляем кнопку "Show more", если есть ещё комментарии
         if (remainingComments.length > 0) {
             const showMoreBtn = document.createElement('div');
             showMoreBtn.classList.add('show-more-comments');
@@ -581,7 +610,6 @@ async function loadComments(postId) {
             commentsList.appendChild(showMoreBtn);
         }
 
-        // Добавляем обработчики для кнопок удаления
         document.querySelectorAll('.delete-comment-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const commentId = e.target.closest('button').getAttribute('data-id');
@@ -590,15 +618,17 @@ async function loadComments(postId) {
         });
     } catch (error) {
         console.error('Error loading comments:', error);
-        document.getElementById(`comments-list-${postId}`).innerHTML = '<p>Error loading comments.</p>';
+        const commentsList = document.getElementById(`comments-list-${postId}`);
+        if (commentsList) {
+            commentsList.innerHTML = '<p>Error loading comments.</p>';
+        }
     }
 }
-// Create comment element with clickable username
+
 function createCommentElement(comment, postId) {
     const commentElement = document.createElement('div');
     commentElement.classList.add('comment-item');
 
-    // Определяем аватарку: используем profileData для владельца профиля, иначе дефолт
     const avatarSrc = (comment.username === profileData.username && profileData.avatarUrl)
         ? profileData.avatarUrl
         : '/media/files/raw.png';
@@ -654,7 +684,7 @@ async function deleteComment(commentId, postId) {
         await fetchWithAuth(`/comments/delete/${commentId}`, { method: 'DELETE' });
         await loadComments(postId);
         await updateCommentCount(postId);
-        await loadProfile({ type: 'userId', value: currentUserId });
+        await updateProfileStats();
     } catch (error) {
         console.error('Error deleting comment:', error);
         alert('Failed to delete comment. Please try again.');
@@ -662,7 +692,10 @@ async function deleteComment(commentId, postId) {
 }
 
 async function submitComment(postId) {
-    const commentText = document.getElementById(`comment-textarea-${postId}`).value.trim();
+    const commentTextArea = document.getElementById(`comment-textarea-${postId}`);
+    if (!commentTextArea) return;
+
+    const commentText = commentTextArea.value.trim();
     if (!commentText) {
         alert('Please enter a comment');
         return;
@@ -673,10 +706,10 @@ async function submitComment(postId) {
             method: 'POST',
             body: JSON.stringify({ postId, content: commentText })
         });
-        document.getElementById(`comment-textarea-${postId}`).value = '';
+        commentTextArea.value = '';
         await loadComments(postId);
         await updateCommentCount(postId);
-        await loadProfile({ type: 'userId', value: currentUserId });
+        await updateProfileStats();
     } catch (error) {
         console.error('Error posting comment:', error);
         alert('Failed to post comment. Please try again.');
@@ -717,11 +750,13 @@ function addPostEventListeners() {
         btn.addEventListener('click', (e) => {
             const postId = e.currentTarget.getAttribute('data-id');
             const commentsSection = document.getElementById(`comments-section-${postId}`);
-            if (commentsSection.style.display === 'none') {
-                commentsSection.style.display = 'block';
-                loadComments(postId);
-            } else {
-                commentsSection.style.display = 'none';
+            if (commentsSection) {
+                if (commentsSection.style.display === 'none') {
+                    commentsSection.style.display = 'block';
+                    loadComments(postId);
+                } else {
+                    commentsSection.style.display = 'none';
+                }
             }
         });
     });
@@ -744,35 +779,39 @@ function addPostEventListeners() {
         btn.addEventListener('click', (e) => {
             const postId = e.currentTarget.getAttribute('data-id');
             postIdToDelete = postId;
-            document.getElementById('deleteModal').style.display = 'flex';
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) {
+                deleteModal.style.display = 'flex';
+            }
         });
     });
 }
 
 // Show repost modal
 function showRepostModal(postId) {
-    // Create modal for repost options if it doesn't exist
-    if (!document.getElementById('repostModal')) {
+    let repostModal = document.getElementById('repostModal');
+
+    if (!repostModal) {
         const modalHTML = `
-            <div id="repostModal" class="modal">
-                <div class="modal-core">
-                    <div class="modal-head">
-                        <h3>Repost Options</h3>
-                        <button id="closeRepostModal" class="close-node">×</button>
+            <div id="repostModal" class="modal-overlay">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h4 class="modal-title" data-lang="repost_options">Share Post</h4>
+                        <span id="closeRepostModal" class="modal-close">×</span>
                     </div>
                     <div class="repost-options">
-                        <button id="repostToFeed" class="repost-option">
-                            <i class="fas fa-stream"></i> Repost to feed
+                        <button id="repostToFeed" class="btn btn-tertiary repost-option">
+                            <i class="fas fa-stream"></i> <span data-lang="repost_to_feed">Repost to feed</span>
                         </button>
-                        <button id="repostToChat" class="repost-option">
-                            <i class="fas fa-comments"></i> Share in conversation
+                        <button id="repostToChat" class="btn btn-tertiary repost-option">
+                            <i class="fas fa-comments"></i> <span data-lang="share_in_conversation">Share in conversation</span>
                         </button>
                     </div>
-                    <div id="chatSelectContainer" style="display: none; margin-top: 15px;">
-                        <select id="conversationSelect" class="conversation-select">
+                    <div id="chatSelectContainer" style="display: none; margin-top: var(--space-md);">
+                        <select id="conversationSelect" class="form-control">
                             <option value="">Select a conversation...</option>
                         </select>
-                        <button id="confirmRepostToChat" class="submit-node" style="margin-top: 10px;">Share</button>
+                        <button id="confirmRepostToChat" class="btn btn-primary mt-sm" data-lang="share">Share</button>
                     </div>
                 </div>
             </div>
@@ -782,60 +821,94 @@ function showRepostModal(postId) {
         modalContainer.innerHTML = modalHTML;
         document.body.appendChild(modalContainer.firstElementChild);
 
-        // Add event listeners for the new modal
-        document.getElementById('closeRepostModal').addEventListener('click', () => {
-            document.getElementById('repostModal').style.display = 'none';
-        });
+        // Обработчики событий
+        const closeRepostModal = document.getElementById('closeRepostModal');
+        if (closeRepostModal) {
+            closeRepostModal.addEventListener('click', () => {
+                repostModal = document.getElementById('repostModal');
+                if (repostModal) {
+                    repostModal.style.display = 'none';
+                }
+            });
+        }
 
-        document.getElementById('repostToFeed').addEventListener('click', () => {
-            repostToFeed(postIdToRepost);
-        });
+        const repostToFeedBtn = document.getElementById('repostToFeed');
+        if (repostToFeedBtn) {
+            repostToFeedBtn.addEventListener('click', () => {
+                repostToFeed(postIdToRepost);
+            });
+        }
 
-        document.getElementById('repostToChat').addEventListener('click', async () => {
-            const chatSelectContainer = document.getElementById('chatSelectContainer');
-            chatSelectContainer.style.display = 'block';
+        const repostToChatBtn = document.getElementById('repostToChat');
+        if (repostToChatBtn) {
+            repostToChatBtn.addEventListener('click', async () => {
+                const chatSelectContainer = document.getElementById('chatSelectContainer');
+                if (chatSelectContainer) {
+                    chatSelectContainer.style.display = 'block';
+                }
 
-            // Load conversations
-            try {
-                const response = await fetchWithAuth('/conversations/list');
-                const conversations = await response.json();
+                try {
+                    const response = await fetchWithAuth('/conversations/list');
+                    const conversations = await response.json();
 
-                const select = document.getElementById('conversationSelect');
-                select.innerHTML = '<option value="">Select a conversation...</option>';
+                    const select = document.getElementById('conversationSelect');
+                    if (select) {
+                        select.innerHTML = '<option value="">Select a conversation...</option>';
 
-                conversations.forEach(conv => {
-                    const option = document.createElement('option');
-                    option.value = conv.id;
-                    option.textContent = conv.title;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading conversations:', error);
-            }
-        });
+                        conversations.forEach(conv => {
+                            const option = document.createElement('option');
+                            option.value = conv.id;
+                            option.textContent = conv.title;
+                            select.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading conversations:', error);
+                    alert('Failed to load conversations');
+                }
+            });
+        }
 
-        document.getElementById('confirmRepostToChat').addEventListener('click', () => {
-            const conversationId = document.getElementById('conversationSelect').value;
-            if (conversationId) {
-                repostToChat(postIdToRepost, conversationId);
-            }
-        });
+        const confirmRepostToChatBtn = document.getElementById('confirmRepostToChat');
+        if (confirmRepostToChatBtn) {
+            confirmRepostToChatBtn.addEventListener('click', () => {
+                const conversationId = document.getElementById('conversationSelect')?.value;
+                if (conversationId) {
+                    repostToChat(postIdToRepost, conversationId);
+                } else {
+                    alert('Please select a conversation');
+                }
+            });
+        }
+
+        // Закрытие при клике вне модального окна
+        repostModal = document.getElementById('repostModal');
+        if (repostModal) {
+            repostModal.addEventListener('click', (event) => {
+                if (event.target === repostModal) {
+                    repostModal.style.display = 'none';
+                }
+            });
+        }
     }
 
-    // Set the post ID and show the modal
     postIdToRepost = postId;
-    document.getElementById('repostModal').style.display = 'flex';
-    document.getElementById('chatSelectContainer').style.display = 'none';
+    repostModal = document.getElementById('repostModal');
+    if (repostModal) {
+        repostModal.style.display = 'flex';
+        const chatSelectContainer = document.getElementById('chatSelectContainer');
+        if (chatSelectContainer) {
+            chatSelectContainer.style.display = 'none';
+        }
+    }
 }
 
 // Handle repost to feed
 async function repostToFeed(postId) {
     try {
-        // Fetch the original post
         const response = await fetchWithAuth(`/posts/${postId}`);
         const post = await response.json();
 
-        // Create a new post with attribution
         const repostContent = `Reposted from @${post.username}: ${post.content}`;
         const repostData = {
             content: repostContent,
@@ -848,11 +921,11 @@ async function repostToFeed(postId) {
             body: JSON.stringify(repostData)
         });
 
-        // Close modal and refresh feed
-        document.getElementById('repostModal').style.display = 'none';
+        const repostModal = document.getElementById('repostModal');
+        if (repostModal) {
+            repostModal.style.display = 'none';
+        }
         await loadRecentPosts();
-
-        // Show success message
         alert('Post reposted successfully!');
     } catch (error) {
         console.error('Error reposting to feed:', error);
@@ -873,10 +946,10 @@ async function repostToChat(postId, conversationId) {
             body: JSON.stringify(repostData)
         });
 
-        // Close modal
-        document.getElementById('repostModal').style.display = 'none';
-
-        // Show success message
+        const repostModal = document.getElementById('repostModal');
+        if (repostModal) {
+            repostModal.style.display = 'none';
+        }
         alert('Post shared in conversation successfully!');
     } catch (error) {
         console.error('Error sharing to conversation:', error);
@@ -889,36 +962,33 @@ async function deletePost() {
     if (!postIdToDelete) return;
 
     try {
-        // 1. Получаем комментарии к посту
         const commentsResponse = await fetchWithAuth(`/comments/post/${postIdToDelete}`);
         const comments = await commentsResponse.json();
 
-        // 2. Удаляем все комментарии
         if (comments.length > 0) {
             await Promise.all(comments.map(comment =>
                 fetchWithAuth(`/comments/delete/${comment.id}`, { method: 'DELETE' })
             ));
         }
 
-        // 3. Удаляем медиа (если есть)
         await fetchWithAuth(`/media/delete/${postIdToDelete}`, { method: 'DELETE' })
             .catch(error => {
                 console.warn('No media to delete or error deleting media:', error);
-                // Игнорируем ошибку, если медиа нет
             });
 
-        // 4. Удаляем сам пост
         await fetchWithAuth(`/posts/delete/${postIdToDelete}`, { method: 'DELETE' });
 
-        // 5. Обновляем страницу
         await loadRecentPosts();
-        await loadProfile({ type: 'userId', value: currentUserId });
+        await updateProfileStats();
         alert('Post and associated comments deleted successfully');
     } catch (error) {
         console.error('Error deleting post:', error);
         alert(`Failed to delete post: ${error.message}`);
     } finally {
-        document.getElementById('deleteModal').style.display = 'none';
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.style.display = 'none';
+        }
         postIdToDelete = null;
     }
 }
@@ -930,20 +1000,30 @@ function openEditProfileModal() {
     const avatarUrlInput = document.getElementById('avatarUrlInput');
     const avatarPreview = document.getElementById('avatarPreview');
 
-    bioInput.value = profileData.bio || '';
-    avatarUrlInput.value = profileData.avatarUrl || '';
-    avatarPreview.src = profileData.avatarUrl || '/media/files/raw.png';
-    document.getElementById('bioCharCount').textContent = bioInput.value.length;
-    modal.style.display = 'block';
+    if (modal && bioInput && avatarUrlInput && avatarPreview) {
+        bioInput.value = profileData.bio || '';
+        avatarUrlInput.value = profileData.avatarUrl || '';
+        avatarPreview.src = profileData.avatarUrl || '/media/files/raw.png';
+        const bioCharCount = document.getElementById('bioCharCount');
+        if (bioCharCount) {
+            bioCharCount.textContent = bioInput.value.length;
+        }
+        modal.style.display = 'block';
+    }
 }
 
 function closeEditProfileModal() {
-    document.getElementById('editProfileModal').style.display = 'none';
+    const modal = document.getElementById('editProfileModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 async function updateProfile() {
     const bioInput = document.getElementById('bioInput');
     const avatarUrlInput = document.getElementById('avatarUrlInput');
+
+    if (!bioInput || !avatarUrlInput) return;
 
     try {
         await fetchWithAuth(`/profiles/${currentUserId}`, {
@@ -962,7 +1042,197 @@ async function updateProfile() {
     }
 }
 
-// Функции для работы с подписками и друзьями
+// Relationships modal
+function showRelationshipsModal(type = 'followers') {
+    const modal = document.getElementById('relationshipsModal');
+    const title = document.getElementById('relationshipsModalTitle');
+    const followersTab = document.getElementById('followersTab');
+    const followingTab = document.getElementById('followingTab');
+    const friendsTab = document.getElementById('friendsTab');
+    const followersContent = document.getElementById('followersContent');
+    const followingContent = document.getElementById('followingContent');
+    const friendsContent = document.getElementById('friendsContent');
+    const friendRequestsSection = document.getElementById('friendRequestsSection');
+
+    if (!modal || !title || !followersTab || !followingTab || !friendsTab || !followersContent || !followingContent || !friendsContent || !friendRequestsSection) {
+        console.error('Relationships modal elements missing');
+        return;
+    }
+
+    if (type === 'followers') {
+        title.textContent = 'Followers';
+        followersTab.classList.add('active');
+        followingTab.classList.remove('active');
+        friendsTab.classList.remove('active');
+        followersContent.style.display = 'block';
+        followingContent.style.display = 'none';
+        friendsContent.style.display = 'none';
+        friendRequestsSection.style.display = isOwnProfile ? 'block' : 'none';
+        loadFollowers();
+    } else if (type === 'following') {
+        title.textContent = 'Following';
+        followersTab.classList.remove('active');
+        followingTab.classList.add('active');
+        friendsTab.classList.remove('active');
+        followersContent.style.display = 'none';
+        followingContent.style.display = 'block';
+        friendsContent.style.display = 'none';
+        friendRequestsSection.style.display = isOwnProfile ? 'block' : 'none';
+        loadFollowing();
+    } else if (type === 'friends') {
+        title.textContent = 'Friends';
+        followersTab.classList.remove('active');
+        followingTab.classList.remove('active');
+        friendsTab.classList.add('active');
+        followersContent.style.display = 'none';
+        followingContent.style.display = 'none';
+        friendsContent.style.display = 'block';
+        friendRequestsSection.style.display = isOwnProfile ? 'block' : 'none';
+        loadFriends();
+    }
+
+    if (isOwnProfile) {
+        loadPendingFriendRequests();
+    }
+
+    modal.style.display = 'flex';
+}
+
+async function loadFollowers() {
+    const followersContent = document.getElementById('followersContent');
+    if (!followersContent) return;
+
+    followersContent.innerHTML = '<p>Loading...</p>';
+
+    try {
+        const followers = await getFollowers();
+        followersContent.innerHTML = '';
+        if (followers.length === 0) {
+            followersContent.innerHTML = '<p>No followers yet.</p>';
+            return;
+        }
+
+        followers.forEach(user => {
+            const userElement = createUserElement(user);
+            followersContent.appendChild(userElement);
+        });
+    } catch (error) {
+        followersContent.innerHTML = '<p>Error loading followers.</p>';
+    }
+}
+
+async function loadFollowing() {
+    const followingContent = document.getElementById('followingContent');
+    if (!followingContent) return;
+
+    followingContent.innerHTML = '<p>Loading...</p>';
+
+    try {
+        const following = await getFollowing();
+        followingContent.innerHTML = '';
+        if (following.length === 0) {
+            followingContent.innerHTML = '<p>Not following anyone yet.</p>';
+            return;
+        }
+
+        following.forEach(user => {
+            const userElement = createUserElement(user);
+            followingContent.appendChild(userElement);
+        });
+    } catch (error) {
+        followingContent.innerHTML = '<p>Error loading following.</p>';
+    }
+}
+
+async function loadFriends() {
+    const friendsContent = document.getElementById('friendsContent');
+    if (!friendsContent) return;
+
+    friendsContent.innerHTML = '<p>Loading...</p>';
+
+    try {
+        const friends = await getFriends();
+        friendsContent.innerHTML = '';
+        if (friends.length === 0) {
+            friendsContent.innerHTML = '<p>No friends yet.</p>';
+            return;
+        }
+
+        friends.forEach(user => {
+            const userElement = createUserElement(user);
+            friendsContent.appendChild(userElement);
+        });
+    } catch (error) {
+        friendsContent.innerHTML = '<p>Error loading friends.</p>';
+    }
+}
+
+async function loadPendingFriendRequests() {
+    const friendRequestsList = document.getElementById('friendRequestsList');
+    if (!friendRequestsList) return;
+
+    friendRequestsList.innerHTML = '<p>Loading...</p>';
+
+    try {
+        const requests = await getPendingFriendRequests();
+        friendRequestsList.innerHTML = '';
+        if (requests.length === 0) {
+            friendRequestsList.innerHTML = '<p>No pending friend requests.</p>';
+            return;
+        }
+
+        requests.forEach(request => {
+            const requestElement = document.createElement('div');
+            requestElement.className = 'friend-request-item';
+            requestElement.innerHTML = `
+                <div class="friend-request-info">
+                    <img src="${request.avatarUrl || '/media/files/raw.png'}" alt="${request.username}'s avatar" class="friend-request-avatar">
+                    <a href="/profile/username/${request.username}" class="friend-request-username">${request.username}</a>
+                </div>
+                <div class="friend-request-actions">
+                    <button class="accept-request-btn" data-id="${request.id}"><i class="fas fa-check"></i> Accept</button>
+                    <button class="reject-request-btn" data-id="${request.id}"><i class="fas fa-times"></i> Reject</button>
+                </div>
+            `;
+            friendRequestsList.appendChild(requestElement);
+        });
+
+        document.querySelectorAll('.accept-request-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const requestId = e.target.closest('button').getAttribute('data-id');
+                if (await acceptFriendRequest(requestId)) {
+                    loadPendingFriendRequests();
+                    loadFriends();
+                    updateProfileStats();
+                }
+            });
+        });
+
+        document.querySelectorAll('.reject-request-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const requestId = e.target.closest('button').getAttribute('data-id');
+                if (await rejectFriendRequest(requestId)) {
+                    loadPendingFriendRequests();
+                    updateProfileStats();
+                }
+            });
+        });
+    } catch (error) {
+        friendRequestsList.innerHTML = '<p>Error loading friend requests.</p>';
+    }
+}
+
+function createUserElement(user) {
+    const userElement = document.createElement('div');
+    userElement.className = 'relationship-item';
+    userElement.innerHTML = `
+        <img src="${user.avatarUrl || '/media/files/raw.png'}" alt="${user.username}'s avatar" class="relationship-avatar">
+        <a href="/profile/username/${user.username}" class="relationship-username">${user.username}</a>
+    `;
+    return userElement;
+}
+
+// Follow and friend functions
 async function followUser(username) {
     try {
         const response = await fetchWithAuth(`/follows/${username}`, {
@@ -970,7 +1240,6 @@ async function followUser(username) {
         });
 
         if (response.ok) {
-            // Обновляем UI, показывая что пользователь подписан
             const followBtn = document.getElementById('followBtn');
             if (followBtn) {
                 followBtn.textContent = 'Unfollow';
@@ -978,7 +1247,7 @@ async function followUser(username) {
                 followBtn.classList.add('btn-secondary');
                 followBtn.onclick = () => unfollowUser(username);
             }
-
+            await updateProfileStats();
             return true;
         }
         return false;
@@ -995,7 +1264,6 @@ async function unfollowUser(username) {
         });
 
         if (response.ok) {
-            // Обновляем UI, показывая что пользователь не подписан
             const followBtn = document.getElementById('followBtn');
             if (followBtn) {
                 followBtn.textContent = 'Follow';
@@ -1003,7 +1271,7 @@ async function unfollowUser(username) {
                 followBtn.classList.add('btn-primary');
                 followBtn.onclick = () => followUser(username);
             }
-
+            await updateProfileStats();
             return true;
         }
         return false;
@@ -1013,7 +1281,6 @@ async function unfollowUser(username) {
     }
 }
 
-// Проверка статуса подписки
 async function checkFollowStatus(username) {
     try {
         const response = await fetchWithAuth(`/follows/check/${username}`);
@@ -1024,7 +1291,6 @@ async function checkFollowStatus(username) {
     }
 }
 
-// Отправка запроса в друзья
 async function sendFriendRequest(username) {
     try {
         const response = await fetchWithAuth(`/friends/requests/${username}`, {
@@ -1032,13 +1298,11 @@ async function sendFriendRequest(username) {
         });
 
         if (response.ok) {
-            // Обновляем UI, чтобы показать, что запрос отправлен
             const friendBtn = document.getElementById('friendBtn');
             if (friendBtn) {
                 friendBtn.textContent = 'Request Sent';
                 friendBtn.disabled = true;
             }
-
             return true;
         }
         return false;
@@ -1048,7 +1312,6 @@ async function sendFriendRequest(username) {
     }
 }
 
-// Проверка статуса дружбы
 async function checkFriendStatus(username) {
     try {
         const response = await fetchWithAuth(`/friends/check/${username}`);
@@ -1059,7 +1322,6 @@ async function checkFriendStatus(username) {
     }
 }
 
-// Получение списка подписок
 async function getFollowing() {
     try {
         const response = await fetchWithAuth('/follows/following');
@@ -1070,7 +1332,6 @@ async function getFollowing() {
     }
 }
 
-// Получение списка подписчиков
 async function getFollowers() {
     try {
         const response = await fetchWithAuth('/follows/followers');
@@ -1081,7 +1342,6 @@ async function getFollowers() {
     }
 }
 
-// Получение списка друзей
 async function getFriends() {
     try {
         const response = await fetchWithAuth('/friends');
@@ -1092,7 +1352,6 @@ async function getFriends() {
     }
 }
 
-// Получение списка ожидающих запросов в друзья
 async function getPendingFriendRequests() {
     try {
         const response = await fetchWithAuth('/friends/requests/pending');
@@ -1103,7 +1362,6 @@ async function getPendingFriendRequests() {
     }
 }
 
-// Принятие запроса в друзья
 async function acceptFriendRequest(requestId) {
     try {
         const response = await fetchWithAuth(`/friends/requests/${requestId}/accept`, {
@@ -1116,7 +1374,6 @@ async function acceptFriendRequest(requestId) {
     }
 }
 
-// Отклонение запроса в друзья
 async function rejectFriendRequest(requestId) {
     try {
         const response = await fetchWithAuth(`/friends/requests/${requestId}/reject`, {
@@ -1131,22 +1388,33 @@ async function rejectFriendRequest(requestId) {
 
 // Setup event listeners
 function setupEventListeners() {
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('jwt_token');
-        window.location.href = '/login?logout=true';
-    });
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('jwt_token');
+            window.location.href = '/login?logout=true';
+        });
+    } else {
+        console.error('logoutBtn not found');
+    }
 
     const bioInput = document.getElementById('bioInput');
     if (bioInput) {
         bioInput.addEventListener('input', () => {
-            document.getElementById('bioCharCount').textContent = bioInput.value.length;
+            const bioCharCount = document.getElementById('bioCharCount');
+            if (bioCharCount) {
+                bioCharCount.textContent = bioInput.value.length;
+            }
         });
     }
 
     const avatarUrlInput = document.getElementById('avatarUrlInput');
     if (avatarUrlInput) {
         avatarUrlInput.addEventListener('input', () => {
-            document.getElementById('avatarPreview').src = avatarUrlInput.value || '/media/files/raw.png';
+            const avatarPreview = document.getElementById('avatarPreview');
+            if (avatarPreview) {
+                avatarPreview.src = avatarUrlInput.value || '/media/files/raw.png';
+            }
         });
     }
 
@@ -1168,9 +1436,52 @@ function setupEventListeners() {
     const cancelDeleteBtn = document.getElementById('cancelDelete');
     if (cancelDeleteBtn) {
         cancelDeleteBtn.addEventListener('click', () => {
-            document.getElementById('deleteModal').style.display = 'none';
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) {
+                deleteModal.style.display = 'none';
+            }
             postIdToDelete = null;
         });
+    }
+
+    const followersItem = document.getElementById('followersItem');
+    if (followersItem) {
+        followersItem.addEventListener('click', () => showRelationshipsModal('followers'));
+    }
+
+    const followingItem = document.getElementById('followingItem');
+    if (followingItem) {
+        followingItem.addEventListener('click', () => showRelationshipsModal('following'));
+    }
+
+    const friendsItem = document.getElementById('friendsItem');
+    if (friendsItem) {
+        friendsItem.addEventListener('click', () => showRelationshipsModal('friends'));
+    }
+
+    const closeRelationshipsModal = document.getElementById('closeRelationshipsModal');
+    if (closeRelationshipsModal) {
+        closeRelationshipsModal.addEventListener('click', () => {
+            const relationshipsModal = document.getElementById('relationshipsModal');
+            if (relationshipsModal) {
+                relationshipsModal.style.display = 'none';
+            }
+        });
+    }
+
+    const followersTab = document.getElementById('followersTab');
+    if (followersTab) {
+        followersTab.addEventListener('click', () => showRelationshipsModal('followers'));
+    }
+
+    const followingTab = document.getElementById('followingTab');
+    if (followingTab) {
+        followingTab.addEventListener('click', () => showRelationshipsModal('following'));
+    }
+
+    const friendsTab = document.getElementById('friendsTab');
+    if (friendsTab) {
+        friendsTab.addEventListener('click', () => showRelationshipsModal('friends'));
     }
 
     setupPostModal();
@@ -1178,6 +1489,7 @@ function setupEventListeners() {
 
 // Initialize
 async function init() {
+    console.log('Starting init');
     const urlIdentifier = getUserIdFromPath();
     const currentUser = await getCurrentUser();
 
@@ -1197,6 +1509,11 @@ async function init() {
         (profileIdentifier.type === 'username' && profileIdentifier.value === currentUser.username);
 
     console.log('Loading profile for identifier:', profileIdentifier);
+    console.log('Checking DOM elements:');
+    console.log('profileUsername:', document.getElementById('profileUsername'));
+    console.log('recentPostsContainer:', document.getElementById('recentPostsContainer'));
+    console.log('logoutBtn:', document.getElementById('logoutBtn'));
+
     await loadProfile(profileIdentifier);
     await loadRecentPosts();
     setupEventListeners();
